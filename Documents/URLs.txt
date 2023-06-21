@@ -1,0 +1,13 @@
+Heaters:
+https://www.dewbuster.com/heater-resistors.html
+https://skyandtelescope.org/astronomy-equipment/diy-dew-heater/
+https://www.eastmidlandsstargazers.org.uk/topic/16935-diy-dew-heaters-and-controller/
+https://astrophotovideo.wordpress.com/simple-diy-dew-heater/
+
+
+Controllers:
+https://www.q-astro.com/ascom-auto-dew-monitor/
+https://github.com/QuidneIT/Q-Astro-Dew-Monitor
+
+https://core-electronics.com.au/projects/camera-dew-controller/
+

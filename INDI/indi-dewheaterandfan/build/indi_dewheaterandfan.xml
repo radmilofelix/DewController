@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<driversList>
+<devGroup group="Auxiliary">
+	<device label="Dew Heaters and Fan" manufacturer="DIY">
+		<driver name="Dew Heaters and Fan">indi_dewheaterandfan</driver>
+		<version>0.1</version>
+	</device>
+</devGroup>
+</driversList>
