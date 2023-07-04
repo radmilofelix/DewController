@@ -1,0 +1,926 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="enabled">
+   <bool>true</bool>
+  </property>
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QSlider" name="generalSlider">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>13</x>
+      <y>179</y>
+      <width>761</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="maximum">
+     <number>255</number>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="QRadioButton" name="radioButtonSerial">
+    <property name="geometry">
+     <rect>
+      <x>296</x>
+      <y>23</y>
+      <width>71</width>
+      <height>18</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Serial</string>
+    </property>
+    <property name="checked">
+     <bool>true</bool>
+    </property>
+    <attribute name="buttonGroup">
+     <string notr="true">buttonGroupComm</string>
+    </attribute>
+   </widget>
+   <widget class="QRadioButton" name="radioButtonNetwork">
+    <property name="geometry">
+     <rect>
+      <x>86</x>
+      <y>23</y>
+      <width>91</width>
+      <height>18</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Network</string>
+    </property>
+    <attribute name="buttonGroup">
+     <string notr="true">buttonGroupComm</string>
+    </attribute>
+   </widget>
+   <widget class="QSpinBox" name="sliderValue">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>350</x>
+      <y>162</y>
+      <width>81</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="maximum">
+     <number>255</number>
+    </property>
+    <property name="singleStep">
+     <number>1</number>
+    </property>
+   </widget>
+   <widget class="QSpinBox" name="baud">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>300</x>
+      <y>76</y>
+      <width>81</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="maximum">
+     <number>1000000</number>
+    </property>
+    <property name="value">
+     <number>115200</number>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_ComPort">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>220</x>
+      <y>49</y>
+      <width>81</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>COM Port: </string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_Baud">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>220</x>
+      <y>80</y>
+      <width>51</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>BAUD:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_IP">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>40</x>
+      <y>49</y>
+      <width>16</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>IP:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_Port">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>40</x>
+      <y>78</y>
+      <width>41</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Port:</string>
+    </property>
+   </widget>
+   <widget class="QSpinBox" name="port">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>95</x>
+      <y>76</y>
+      <width>81</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="maximum">
+     <number>65535</number>
+    </property>
+    <property name="value">
+     <number>20002</number>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="connect">
+    <property name="geometry">
+     <rect>
+      <x>70</x>
+      <y>120</y>
+      <width>111</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Connect</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="disconnect">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>260</x>
+      <y>120</y>
+      <width>111</width>
+      <height>18</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Disconnect</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="setPushButton">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>437</x>
+      <y>161</y>
+      <width>60</width>
+      <height>24</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>SET</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="hostAddress">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>74</x>
+      <y>48</y>
+      <width>131</width>
+      <height>20</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="Line" name="line">
+    <property name="geometry">
+     <rect>
+      <x>25</x>
+      <y>149</y>
+      <width>380</width>
+      <height>4</height>
+     </rect>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="Line" name="line_2">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>14</y>
+      <width>4</width>
+      <height>131</height>
+     </rect>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Vertical</enum>
+    </property>
+   </widget>
+   <widget class="Line" name="line_3">
+    <property name="geometry">
+     <rect>
+      <x>25</x>
+      <y>7</y>
+      <width>380</width>
+      <height>4</height>
+     </rect>
+    </property>
+    <property name="minimumSize">
+     <size>
+      <width>380</width>
+      <height>0</height>
+     </size>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="Line" name="line_4">
+    <property name="geometry">
+     <rect>
+      <x>401</x>
+      <y>14</y>
+      <width>16</width>
+      <height>131</height>
+     </rect>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Vertical</enum>
+    </property>
+   </widget>
+   <widget class="Line" name="line_5">
+    <property name="geometry">
+     <rect>
+      <x>208</x>
+      <y>13</y>
+      <width>16</width>
+      <height>97</height>
+     </rect>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Vertical</enum>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="comPort">
+    <property name="geometry">
+     <rect>
+      <x>287</x>
+      <y>50</y>
+      <width>113</width>
+      <height>20</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QSpinBox" name="heater1">
+    <property name="geometry">
+     <rect>
+      <x>217</x>
+      <y>266</y>
+      <width>81</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="readOnly">
+     <bool>true</bool>
+    </property>
+    <property name="buttonSymbols">
+     <enum>QAbstractSpinBox::NoButtons</enum>
+    </property>
+    <property name="maximum">
+     <number>255</number>
+    </property>
+   </widget>
+   <widget class="QSpinBox" name="heater2">
+    <property name="geometry">
+     <rect>
+      <x>218</x>
+      <y>291</y>
+      <width>81</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="readOnly">
+     <bool>true</bool>
+    </property>
+    <property name="buttonSymbols">
+     <enum>QAbstractSpinBox::NoButtons</enum>
+    </property>
+    <property name="maximum">
+     <number>255</number>
+    </property>
+   </widget>
+   <widget class="QSpinBox" name="heater3">
+    <property name="geometry">
+     <rect>
+      <x>220</x>
+      <y>319</y>
+      <width>81</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="readOnly">
+     <bool>true</bool>
+    </property>
+    <property name="buttonSymbols">
+     <enum>QAbstractSpinBox::NoButtons</enum>
+    </property>
+    <property name="maximum">
+     <number>255</number>
+    </property>
+   </widget>
+   <widget class="QSpinBox" name="heater4">
+    <property name="geometry">
+     <rect>
+      <x>514</x>
+      <y>317</y>
+      <width>81</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="readOnly">
+     <bool>true</bool>
+    </property>
+    <property name="buttonSymbols">
+     <enum>QAbstractSpinBox::NoButtons</enum>
+    </property>
+    <property name="maximum">
+     <number>255</number>
+    </property>
+   </widget>
+   <widget class="QSpinBox" name="heater5">
+    <property name="geometry">
+     <rect>
+      <x>511</x>
+      <y>263</y>
+      <width>81</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="readOnly">
+     <bool>true</bool>
+    </property>
+    <property name="buttonSymbols">
+     <enum>QAbstractSpinBox::NoButtons</enum>
+    </property>
+    <property name="maximum">
+     <number>255</number>
+    </property>
+   </widget>
+   <widget class="QSpinBox" name="heater6">
+    <property name="geometry">
+     <rect>
+      <x>510</x>
+      <y>288</y>
+      <width>81</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="readOnly">
+     <bool>true</bool>
+    </property>
+    <property name="buttonSymbols">
+     <enum>QAbstractSpinBox::NoButtons</enum>
+    </property>
+    <property name="maximum">
+     <number>255</number>
+    </property>
+   </widget>
+   <widget class="QSpinBox" name="heater7">
+    <property name="geometry">
+     <rect>
+      <x>334</x>
+      <y>439</y>
+      <width>81</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="readOnly">
+     <bool>true</bool>
+    </property>
+    <property name="buttonSymbols">
+     <enum>QAbstractSpinBox::NoButtons</enum>
+    </property>
+    <property name="maximum">
+     <number>255</number>
+    </property>
+   </widget>
+   <widget class="QSpinBox" name="heater8">
+    <property name="geometry">
+     <rect>
+      <x>332</x>
+      <y>513</y>
+      <width>81</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="readOnly">
+     <bool>true</bool>
+    </property>
+    <property name="buttonSymbols">
+     <enum>QAbstractSpinBox::NoButtons</enum>
+    </property>
+    <property name="maximum">
+     <number>255</number>
+    </property>
+   </widget>
+   <widget class="QRadioButton" name="radioButtonH1">
+    <property name="geometry">
+     <rect>
+      <x>125</x>
+      <y>266</y>
+      <width>69</width>
+      <height>18</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Heater 1</string>
+    </property>
+    <property name="checked">
+     <bool>true</bool>
+    </property>
+    <attribute name="buttonGroup">
+     <string notr="true">buttonGroupHeaters</string>
+    </attribute>
+   </widget>
+   <widget class="QRadioButton" name="radioButtonH2">
+    <property name="geometry">
+     <rect>
+      <x>128</x>
+      <y>295</y>
+      <width>69</width>
+      <height>18</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Heater 2</string>
+    </property>
+    <attribute name="buttonGroup">
+     <string notr="true">buttonGroupHeaters</string>
+    </attribute>
+   </widget>
+   <widget class="QRadioButton" name="radioButtonH3">
+    <property name="geometry">
+     <rect>
+      <x>128</x>
+      <y>321</y>
+      <width>69</width>
+      <height>18</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Heater 3</string>
+    </property>
+    <attribute name="buttonGroup">
+     <string notr="true">buttonGroupHeaters</string>
+    </attribute>
+   </widget>
+   <widget class="QRadioButton" name="radioButtonH4">
+    <property name="geometry">
+     <rect>
+      <x>422</x>
+      <y>321</y>
+      <width>69</width>
+      <height>18</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Heater 4</string>
+    </property>
+    <attribute name="buttonGroup">
+     <string notr="true">buttonGroupHeaters</string>
+    </attribute>
+   </widget>
+   <widget class="QRadioButton" name="radioButtonH5">
+    <property name="geometry">
+     <rect>
+      <x>419</x>
+      <y>267</y>
+      <width>69</width>
+      <height>18</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Heater 5</string>
+    </property>
+    <attribute name="buttonGroup">
+     <string notr="true">buttonGroupHeaters</string>
+    </attribute>
+   </widget>
+   <widget class="QRadioButton" name="radioButtonH6">
+    <property name="geometry">
+     <rect>
+      <x>422</x>
+      <y>292</y>
+      <width>69</width>
+      <height>18</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Heater 6</string>
+    </property>
+    <attribute name="buttonGroup">
+     <string notr="true">buttonGroupHeaters</string>
+    </attribute>
+   </widget>
+   <widget class="QRadioButton" name="radioButtonH7">
+    <property name="geometry">
+     <rect>
+      <x>248</x>
+      <y>439</y>
+      <width>69</width>
+      <height>18</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Fan 1</string>
+    </property>
+    <attribute name="buttonGroup">
+     <string notr="true">buttonGroupHeaters</string>
+    </attribute>
+   </widget>
+   <widget class="QRadioButton" name="radioButtonH8">
+    <property name="geometry">
+     <rect>
+      <x>248</x>
+      <y>512</y>
+      <width>69</width>
+      <height>18</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Fan 2</string>
+    </property>
+    <attribute name="buttonGroup">
+     <string notr="true">buttonGroupHeaters</string>
+    </attribute>
+   </widget>
+   <widget class="QSpinBox" name="temperatureBox">
+    <property name="geometry">
+     <rect>
+      <x>501</x>
+      <y>82</y>
+      <width>59</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="readOnly">
+     <bool>true</bool>
+    </property>
+    <property name="buttonSymbols">
+     <enum>QAbstractSpinBox::NoButtons</enum>
+    </property>
+    <property name="maximum">
+     <number>100</number>
+    </property>
+   </widget>
+   <widget class="QSpinBox" name="humidityBox">
+    <property name="geometry">
+     <rect>
+      <x>585</x>
+      <y>82</y>
+      <width>58</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="readOnly">
+     <bool>true</bool>
+    </property>
+    <property name="buttonSymbols">
+     <enum>QAbstractSpinBox::NoButtons</enum>
+    </property>
+    <property name="maximum">
+     <number>100</number>
+    </property>
+   </widget>
+   <widget class="QSpinBox" name="airPressureBox">
+    <property name="geometry">
+     <rect>
+      <x>659</x>
+      <y>83</y>
+      <width>69</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="readOnly">
+     <bool>true</bool>
+    </property>
+    <property name="buttonSymbols">
+     <enum>QAbstractSpinBox::NoButtons</enum>
+    </property>
+    <property name="maximum">
+     <number>2000</number>
+    </property>
+   </widget>
+   <widget class="QSpinBox" name="rpm1Box">
+    <property name="geometry">
+     <rect>
+      <x>435</x>
+      <y>439</y>
+      <width>60</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="readOnly">
+     <bool>true</bool>
+    </property>
+    <property name="buttonSymbols">
+     <enum>QAbstractSpinBox::NoButtons</enum>
+    </property>
+    <property name="maximum">
+     <number>3000</number>
+    </property>
+   </widget>
+   <widget class="QSpinBox" name="rpm2Box">
+    <property name="geometry">
+     <rect>
+      <x>433</x>
+      <y>513</y>
+      <width>62</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="readOnly">
+     <bool>true</bool>
+    </property>
+    <property name="buttonSymbols">
+     <enum>QAbstractSpinBox::NoButtons</enum>
+    </property>
+    <property name="maximum">
+     <number>3000</number>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="Fan2RPMEnabled">
+    <property name="geometry">
+     <rect>
+      <x>249</x>
+      <y>493</y>
+      <width>73</width>
+      <height>18</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>RPM</string>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="Fan1RPMEnabled">
+    <property name="geometry">
+     <rect>
+      <x>249</x>
+      <y>416</y>
+      <width>72</width>
+      <height>18</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string> RPM</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label">
+    <property name="geometry">
+     <rect>
+      <x>352</x>
+      <y>415</y>
+      <width>37</width>
+      <height>12</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>PWM</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_2">
+    <property name="geometry">
+     <rect>
+      <x>440</x>
+      <y>416</y>
+      <width>37</width>
+      <height>12</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>RPM</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_3">
+    <property name="geometry">
+     <rect>
+      <x>350</x>
+      <y>495</y>
+      <width>37</width>
+      <height>12</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>PWM</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_4">
+    <property name="geometry">
+     <rect>
+      <x>442</x>
+      <y>495</y>
+      <width>37</width>
+      <height>12</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>RPM</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_5">
+    <property name="geometry">
+     <rect>
+      <x>231</x>
+      <y>201</y>
+      <width>37</width>
+      <height>12</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>PWM</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_6">
+    <property name="geometry">
+     <rect>
+      <x>231</x>
+      <y>224</y>
+      <width>37</width>
+      <height>12</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>PWM</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_7">
+    <property name="geometry">
+     <rect>
+      <x>229</x>
+      <y>354</y>
+      <width>37</width>
+      <height>12</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>PWM</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_8">
+    <property name="geometry">
+     <rect>
+      <x>530</x>
+      <y>204</y>
+      <width>37</width>
+      <height>12</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>PWM</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_9">
+    <property name="geometry">
+     <rect>
+      <x>531</x>
+      <y>229</y>
+      <width>37</width>
+      <height>12</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>PWM</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_10">
+    <property name="geometry">
+     <rect>
+      <x>538</x>
+      <y>348</y>
+      <width>37</width>
+      <height>12</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>PWM</string>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>800</width>
+     <height>17</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>generalSlider</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>sliderValue</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>25</x>
+     <y>469</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>390</x>
+     <y>518</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>sliderValue</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>generalSlider</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>411</x>
+     <y>518</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>411</x>
+     <y>468</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <buttongroups>
+  <buttongroup name="buttonGroupComm"/>
+  <buttongroup name="buttonGroupHeaters"/>
+ </buttongroups>
+</ui>

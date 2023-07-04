@@ -26,19 +26,11 @@ Pull the reset pin of W5500 up to Vcc with a 5Kohm resistor. Use a 5V tolerant
 pin of the STM32 module to reset the W5500 at startup.
 */
 
-/*
-	TODO:	red LED to indicate that ethernet cable is not connected
-			red leds on analog exits for heaters and fans - they will be modulated by the PWM signal
-*/
-
-
 
 #include "dewHeaterController.h"
 
-//#define RPMPIN PA0
-//#define HALLPIN PA0 // pin for the hall sensor
-#define RPMPIN PA1
-#define HALLPIN PA1 // pin for the hall sensor
+#define RPMPIN1 PA0
+#define RPMPIN2 PA1
 #define MAGPOLES 2 // number of poles driving the Hall sensor
 #define ETHLED PC13
 
@@ -48,31 +40,81 @@ long rpm = 0;
 int speed = 9999;
 DHT dhtSensor(DHTPIN,DHTTYPE);
 
-
-long GetRPM()
+long GetRPM(int fanNumber)
 {
   long localRPM;
-  localRPM = pulseInLong(HALLPIN, HIGH)* MAGPOLES * 2; // duration of one rotation of the fan (us)//
+  switch(fanNumber)
+  {
+	  case 1:
+	  	if(dewControllerData.fanRPMcapability & 1)
+		{
+			localRPM = pulseInLong(RPMPIN1, HIGH)* MAGPOLES * 2; // duration of one rotation of the fan (us)//
+		}
+		else
+		{
+			localRPM = 0;
+		}
+	  break;
+	  
+	  case 2:
+	  	if(dewControllerData.fanRPMcapability & 2)
+		{
+			localRPM = pulseInLong(RPMPIN2, HIGH)* MAGPOLES * 2; // duration of one rotation of the fan (us)//
+		}
+		else
+		{
+			localRPM = 0;
+		}
+	  break;
+	  
+	  default:
+	  localRPM = 0;
+  }
 //  Serial.print("GetRPM: "); Serial.println(localRPM,DEC);
   if(localRPM > 0)
+  {
     localRPM = 60000000 / localRPM;
+  }
   return localRPM;
 }
 
-long GetDebouncedRPM()
+long GetDebouncedRPM(int fanNumber)
 {
+  switch(fanNumber)
+  {
+	case 1:
+		if(dewControllerData.pwmDevice[6] < 1 || !(dewControllerData.fanRPMcapability & 1 ))
+		{
+			return 0;
+		}
+	break;
+
+	case 2:
+		if(dewControllerData.pwmDevice[7] < 1 || !(dewControllerData.fanRPMcapability & 2 ))
+		{
+			return 0;
+		}
+	break;
+  }
   long localRPM;
+//  for(int i=0; i<4; i++)
   for(int i=0; i<20; i++)
   {
-    localRPM = GetRPM();
-    long diff = abs(rpm - localRPM);
-   if(diff < 100 && localRPM < 2000)
-   {
-    rpm = localRPM;
-    return rpm;
-   }
+
+    localRPM = GetRPM(fanNumber);
+	Serial.print("Fan number: "); Serial.print(fanNumber); Serial.print("   Local RPM: "); Serial.println(localRPM);
+//	if(localRPM > 0)
+	{
+    	long diff = abs(rpm - localRPM);
+   		if(diff < 100 && localRPM < 2000)
+   		{
+   			rpm = localRPM;
+    		return rpm;
+   		}
+	}
+//	delay(100);
   }
-  if(localRPM > 2000)
+  if(localRPM > 2500)
   {
     rpm = 0;
   }
@@ -89,14 +131,14 @@ void setup()
 	pwmPin[0] = PB6;
 	pwmPin[1] = PB7;
 	pwmPin[2] = PB8;
-	pwmPin[3] = PB9;
+	pwmPin[3] = PB3;
 	pwmPin[4] = PA15;
-	pwmPin[5] = PB3;
+	pwmPin[5] = PB9;
 	pwmPin[6] = PB4;
 	pwmPin[7] = PB5;
 
-//	analogWriteFrequency(25000); // set PWM frequency - all timers - to 25KHz (default is 1kHz)
-	analogWriteFrequency(8000); // set PWM frequency - all timers - to 8KHz (default is 1kHz)
+	analogWriteFrequency(25000); // set PWM frequency - all timers - to 25KHz (default is 1kHz)
+//	analogWriteFrequency(8000); // set PWM frequency - all timers - to 8KHz (default is 1kHz)
 //	analogWriteFrequency(1000); // set PWM frequency - all timers - to 1KHz - default
 //	analogWriteResolution(ANALOGWRITERESOLUTION); // default
 
@@ -106,16 +148,16 @@ void setup()
 		analogWrite(pwmPin[i],0);
 	}
 
-//  switch off ETH LED
-	pinMode(ETHLED, OUTPUT);
-	digitalWrite(ETHLED, LOW);
-
 // Reset W5500 before starting
 	pinMode(RESETPIN, OUTPUT);
 	digitalWrite(RESETPIN, LOW);
 	delay(300);
 	digitalWrite(RESETPIN, HIGH);
 	delay(300);
+
+//  switch off ETH LED
+	pinMode(ETHLED, OUTPUT);
+	digitalWrite(ETHLED, LOW);
 
 // initialize the Ethernet device
 //  Ethernet.begin(mac, ip, myDns, gateway, subnet);
@@ -134,22 +176,26 @@ void setup()
   // Check for Ethernet hardware present
 	if (Ethernet.hardwareStatus() == EthernetNoHardware)
 	{
-		digitalWrite(ETHLED, HIGH);
+		digitalWrite(ETHLED, LOW);
 #ifdef DEBUG
 		Serial.println("Ethernet shield was not found.  Sorry, can't connect to ethernet without hardware.");
 #endif
-//    while (true) // Serial connection is available, so we can proceed without ethernet
-//	{
-//      delay(1); // do nothing, no point running without Ethernet hardware
-//    }
+	}
+	else
+	{
+		digitalWrite(ETHLED, HIGH);
 	}
 	delay(2000);
 	if (Ethernet.linkStatus() == LinkOFF)
 	{
-		digitalWrite(ETHLED, HIGH);
+		digitalWrite(ETHLED, LOW);
 #ifdef DEBUG
     	Serial.println("Ethernet cable is not connected.");
 #endif
+	}
+	else
+	{
+		digitalWrite(ETHLED, HIGH);
 	}
 
   // start listening for clients
@@ -161,13 +207,16 @@ void setup()
 #endif
 
 	dewControllerData.command = 0;
-	sensorTemperature = 0.;
-	sensorAirHumidity = 0.;
-	sensorAirPressure = 0.;  
+	dewControllerData.fanRPMcapability = 0;
+	dewControllerData.temperature = 0;
+	dewControllerData.airHumidity = 0;
+	dewControllerData.airPressure = 0;
+//	sensorTemperature = 0.;
+//	sensorAirHumidity = 0.;
+//	sensorAirPressure = 0.;  
 	for (int i = 0; i < 8; i++)
 	{
 		dewControllerData.pwmDevice[i] = 0;
-		dewControllerData.pwmLimitPercent[i] = 0;
 	}
 }
 
@@ -203,23 +252,14 @@ bool IsTimerExpired(unsigned long *timer, unsigned long intervalSeconds)
 
 void PackData()
 {
-
-//#ifdef DEBUG
-//sensorTemperature = 1.1;
-//sensorAirHumidity = 85.3;
-//sensorAirPressure = 1002.5;
-//for (int i = 0; i < 8; i++)
-//{
-//	dewControllerData.pwmDevice[i] = i+10;
-//	dewControllerData.pwmLimitPercent[i] = i+50;
-//}
-//#endif
-
+	PollDhtSensor();
+//	dewControllerData.rpm1 = GetDebouncedRPM(1);
+//	dewControllerData.rpm2 = GetDebouncedRPM(2);
 	char dataElement[100];
 	buffer[0] = 0;
-	dewControllerData.temperature = sensorTemperature * 10;
-	dewControllerData.airHumidity = sensorAirHumidity * 10;
-	dewControllerData.airPressure = sensorAirPressure * 10;
+//	dewControllerData.temperature = sensorTemperature * 100;
+//	dewControllerData.airHumidity = sensorAirHumidity * 100;
+//	dewControllerData.airPressure = sensorAirPressure * 100;
 	itoa( dewControllerData.command, dataElement, 10);
 	strcat(buffer, dataElement);
 	strcat(buffer, ",");
@@ -229,28 +269,31 @@ void PackData()
 		strcat(buffer, dataElement);
 		strcat(buffer, ",");
 	}
-		for (int i = 9; i < 12; i++)
+		for (int i = 9; i < 15; i++)
 	{
 		switch (i)
 		{
 		case 9:
-			itoa( dewControllerData.temperature, dataElement, 10);
+			itoa( dewControllerData.fanRPMcapability, dataElement, 10);
 			break;
 		case 10:
-			itoa( dewControllerData.airHumidity, dataElement, 10);
+			itoa( dewControllerData.temperature, dataElement, 10);
 			break;
 		case 11:
+			itoa( dewControllerData.airHumidity, dataElement, 10);
+			break;
+		case 12:
 			itoa( dewControllerData.airPressure, dataElement, 10);
+			break;
+		case 13:
+			itoa( dewControllerData.rpm1, dataElement, 10);
+			break;
+		case 14:
+			itoa( dewControllerData.rpm2, dataElement, 10);
 			break;
 		default:
 			break;
 		}
-		strcat(buffer, dataElement);
-		strcat(buffer, ",");
-	}
-	for (int i = 12; i < 20; i++)
-	{
-		itoa( dewControllerData.pwmLimitPercent[i-12], dataElement, 10);
 		strcat(buffer, dataElement);
 		strcat(buffer, ",");
 	}
@@ -284,17 +327,20 @@ void UnpackData(char* dataString)
 				dewControllerData.pwmDevice[dataCounter-1] = atoi(localString);
 				break;
 			case 9:
+				dewControllerData.fanRPMcapability = atoi(localString);
+				break;
+
+/*
+			case 10:
 				dewControllerData.temperature = atoi(localString);
 				break;
-			case 10:
+			case 11:
 				dewControllerData.airHumidity = atoi(localString);
 				break;
-			case 11:
+			case 12:
 				dewControllerData.airPressure = atoi(localString);
 				break;
-			case 12: case 13: case 14: case 15: case 16: case 17: case 18: case 19:
-				dewControllerData.pwmLimitPercent[dataCounter-12] = atoi(localString);
-				break;
+//*/
 
 			default:
 				break;
@@ -303,41 +349,22 @@ void UnpackData(char* dataString)
 		}
 
 	}
-	localString[charCounter] = 0;
-	dewControllerData.pwmLimitPercent[7] = atoi(localString);
-	sensorTemperature = (float)dewControllerData.temperature / 10;
-	sensorAirHumidity = (float)dewControllerData.airHumidity / 10;
-	sensorAirPressure = (float)dewControllerData.airPressure / 10; 
+//	localString[charCounter] = 0;
+//	dewControllerData.pwmLimitPercent[7] = atoi(localString);
+//	sensorTemperature = (float)dewControllerData.temperature / 100;
+//	sensorAirHumidity = (float)dewControllerData.airHumidity / 100;
+//	sensorAirPressure = (float)dewControllerData.airPressure / 100; 
 }
 
 void SetHeatersAndFans()
 {
 	for(int i=0; i<8; i++)
 	{
-		if(dewControllerData.pwmDevice[i] > maxPWMvalue)
-			dewControllerData.pwmDevice[i] = maxPWMvalue;
-		int PWMlimit = 	(maxPWMvalue * dewControllerData.pwmLimitPercent[i] / 100);
-		if( dewControllerData.pwmDevice[i] > PWMlimit)
-			analogWrite(pwmPin[i], PWMlimit);
-		else
-			analogWrite(pwmPin[i], dewControllerData.pwmDevice[i]);
-		Serial.print("i = ");
-		Serial.print(i);
-		Serial.print("          ");
-		Serial.print("pwmPin = ");
-		Serial.print(pwmPin[i]);
-		Serial.print("          ");
-		Serial.print("pwmValue = ");
-		Serial.print(dewControllerData.pwmDevice[i]);
-		Serial.print("          ");
-		Serial.print("pwmLimit = ");
-		Serial.print(PWMlimit);
-		Serial.print("          ");
-		Serial.print("maxPWMvalue = ");
-		Serial.println(maxPWMvalue);
+		analogWrite(pwmPin[i], dewControllerData.pwmDevice[i]);
 	}
 }
 
+//*
 #ifdef DEBUG
 void DisplayData()
 {
@@ -353,26 +380,23 @@ void DisplayData()
 	}
 
 	Serial.println();
-	Serial.print("temperature: "); Serial.println(temperatureDht);
-	Serial.print("airHumidity: "); Serial.println(humidityDht);
+	Serial.print("temperature: "); Serial.println(dewControllerData.temperature/100);
+	Serial.print("airHumidity: "); Serial.println(dewControllerData.airHumidity/100);
 	Serial.println();
-
-
-//	Serial.print("temperature: "); Serial.println(dewControllerData.temperature);
-//	Serial.print("airHumidity: "); Serial.println(dewControllerData.airHumidity);
-
 	Serial.print("airPressure: "); Serial.println(dewControllerData.airPressure);
 	Serial.println();
 
-	for (int i = 0; i < 8; i++)
-	{
-		Serial.print("pwmLimitPercent ");
-		Serial.print(i);
-		Serial.print(": ");
-		Serial.println(dewControllerData.pwmLimitPercent[i]);
-	}
+	Serial.print("Fans RPM capability: "); Serial.println(dewControllerData.fanRPMcapability);
+	Serial.println();
+
+	Serial.print("RPM 1: "); Serial.println(dewControllerData.rpm1);
+	Serial.print("RPM 2: "); Serial.println(dewControllerData.rpm2);
+	Serial.println();
+
+
 }
 #endif
+//*/
 
 void CheckConnections()
 {
@@ -422,8 +446,11 @@ void SendResponse(char* response)
 
 void PollDhtSensor()
 {
-	temperatureDht=dhtSensor.readTemperature();
-	humidityDht=dhtSensor.readHumidity();
+	dewControllerData.temperature = dhtSensor.readTemperature()*100;
+	dewControllerData.airHumidity = dhtSensor.readHumidity()*100;
+
+//	sensorTemperature=dhtSensor.readTemperature();
+//	sensorAirHumidity=dhtSensor.readHumidity();
 }
 
 void ProcessRequests()
@@ -431,15 +458,15 @@ void ProcessRequests()
 #ifdef DEBUG
 	if(strlen(buffer))
 	{
-		Serial.print("\r\nReceived: ");
-		Serial.println(buffer);
+//		Serial.print("\r\nReceived: ");
+//		Serial.println(buffer);
 	}
 #endif
 
-	if(!strcmp(buffer,"DHCC"))
+	if(!strcmp(buffer,"YOOHOO"))
 //	if(!strcmp(buffer,"DewHeaterController-Connect"))
 	{
-		Serial.println("DewHeater connetc received");
+//		Serial.println("DewHeater connect received");
 		if(isTCPrequest)
 		{
 			dewDriverTimer = millis();
@@ -451,7 +478,7 @@ void ProcessRequests()
 			dewHeaterDriverConnect1 = 1;
 		}
 		char txBuffer[50];
-		strcpy(txBuffer, "DewHeaterController-Connect-Ok");
+		strcpy(txBuffer, "2u2");
 		isSerialrequest = true;
 		SendResponse(txBuffer);
 		return;
@@ -466,7 +493,12 @@ void ProcessRequests()
 		return;
 	}
 
-	if (buffer[0] == '2' && buffer[1] == '7' && buffer[2] == '3'&& buffer[3] == '5' && buffer[4] == ',')
+	if(!strcmp(buffer,"grpm"))
+	{
+		dewControllerData.rpm1 = GetDebouncedRPM(1);
+		dewControllerData.rpm2 = GetDebouncedRPM(2);
+	}
+	if (buffer[0] == '2' && buffer[1] == '8' && buffer[2] == '1'&& buffer[3] == '3' && buffer[4] == ',')
                       //UnpackData("2735,11,22,33,44,55,66,111,222,11,853,9025,51,52,53,54,55,56,57,58");
 					  // Serial.println(GetDebouncedRPM(), DEC);
 
@@ -481,36 +513,6 @@ void ProcessRequests()
 					  // 2735,255,255,255,255,255,255,255,255,255,853,9025,100,100,100,100,100,100,100,100
 
 
-					  // 2735,127,0,0,0,0,0,0,0,11,853,9025,100,100,100,100,100,100,100,100
-					  // 2735,0,127,0,0,0,0,0,0,11,853,9025,100,100,100,100,100,100,100,100
-					  // 2735,0,0,127,0,0,0,0,0,11,853,9025,100,100,100,100,100,100,100,100
-					  // 2735,0,0,0,127,0,0,0,0,11,853,9025,100,100,100,100,100,100,100,100
-					  // 2735,0,0,0,0,127,0,0,0,11,853,9025,100,100,100,100,100,100,100,100
-					  // 2735,0,0,0,0,0,127,0,0,11,853,9025,100,100,100,100,100,100,100,100
-					  // 2735,0,0,0,0,0,0,127,0,11,853,9025,100,100,100,100,100,100,100,100
-					  // 2735,0,0,0,0,0,0,0,127,11,853,9025,100,100,100,100,100,100,100,100
-
-
-					  // 2735,257,22,33,44,55,66,111,222,11,853,9025,100,52,53,54,55,56,57,58
-					  // 2735,255,22,33,44,55,66,111,222,11,853,9025,100,52,53,54,55,56,57,58
-					  // 2735,201,22,33,44,55,66,111,222,11,853,9025,100,52,53,54,55,56,57,58
-					  // 2735,201,22,33,44,55,66,111,222,11,853,9025,100,52,53,54,55,56,57,58
-					  // 2735,127,22,33,44,55,66,111,222,11,853,9025,100,100,100,100,100,100,100,100
-					  // 2735,100,22,33,44,55,66,111,222,11,853,9025,100,52,53,54,55,56,57,58
-					  // 2735,64,22,33,44,55,66,111,222,11,853,9025,100,52,53,54,55,56,57,58
-					  // 2735,32,22,33,44,55,66,111,222,11,853,9025,100,52,53,54,55,56,57,58
-					  // 2735,16,22,33,44,55,66,111,222,11,853,9025,100,52,53,54,55,56,57,58
-					  // 2735,8,22,33,44,55,66,111,222,11,853,9025,100,52,53,54,55,56,57,58
-					  // 2735,4,22,33,44,55,66,111,222,11,853,9025,100,52,53,54,55,56,57,58
-					  // 2735,2,22,33,44,55,66,111,222,11,853,9025,100,52,53,54,55,56,57,58
-					  // 2735,1,22,33,44,55,66,111,222,11,853,9025,100,52,53,54,55,56,57,58
-					  // 2735,201,22,33,44,55,66,111,222,11,853,9025,100,52,53,54,55,56,57,58
-					  // 2735,257,22,33,44,55,66,111,1,11,853,9025,50,52,53,54,55,56,57,58
-					  // 2735,255,22,33,44,55,66,111,255,11,853,9025,51,52,53,54,55,56,57,100
-					  // 2735,255,22,33,44,55,66,111,255,11,853,9025,50,52,53,54,55,56,57,50
-					  // 2735,255,22,33,44,55,66,111,0,11,853,9025,50,52,53,54,55,56,57,58
-					  // 2735,255,22,33,44,55,66,111,4095,11,853,9025,50,52,53,54,55,56,57,50
-					  // 2735,255,22,33,44,55,66,111,1,11,853,9025,50,52,53,54,55,56,57,58
 	{
 		UnpackData(buffer);
 		SetHeatersAndFans();
@@ -525,14 +527,15 @@ void ProcessRequests()
 }
 
 
+/*
 void DisplayTmperature()
 {
 	PollDhtSensor();
-	Serial.print("temperature: "); Serial.println(temperatureDht);
-	Serial.print("airHumidity: "); Serial.println(humidityDht);
+	Serial.print("temperature: "); Serial.println(sensorTemperature);
+	Serial.print("airHumidity: "); Serial.println(sensorAirHumidity);
 	Serial.println();
 }
-
+*/
 
 void loop()
 {
@@ -559,7 +562,7 @@ void loop()
 #ifdef DEBUG
       Serial.println("We have a new client-0");
 #endif
-      client.println("Hello, astro client!");
+      client.println("Hello, astronomer!");
 	  isTCPalreadyConnected = true;
       dewHeaterDriverConnect = 1;
 	  dewDriverTimer = millis();
@@ -584,7 +587,7 @@ void loop()
 #ifdef DEBUG
       Serial.println("We have a new client-1");
 #endif
-      client1.println("Hello, astro client-1!");
+      client1.println("Hello, astronomer!");
 	  isTCPalreadyConnected1 = true;
       dewHeaterDriverConnect1 = 1;
 	  dewDriverTimer1 = millis();
@@ -615,12 +618,9 @@ void loop()
 	ProcessRequests();
  	isTCPrequest = false;
 	isTCPrequest1 = false;
+//	dewControllerData.rpm1 = GetDebouncedRPM(1);
+//	dewControllerData.rpm2 = GetDebouncedRPM(2);
 //	CheckConnections();
-
-delay(4000);
-DisplayTmperature();
-
-
 }
 
 
