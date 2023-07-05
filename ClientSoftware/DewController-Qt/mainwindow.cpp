@@ -43,6 +43,7 @@ MainWindow::MainWindow(QWidget *parent)
         heaters[i]=0;
     }
     fansRPMenable = 0;
+    SetControlsEnable(false);
 }
 
 
@@ -153,12 +154,13 @@ void MainWindow::ButtonConnect()
     ui->baud->setEnabled(false);
     ui->hostAddress->setEnabled(false);
     ui->port->setEnabled(false);
-
     ui->connect->setEnabled(false);
+    ui->label_ComPort->setEnabled(false);
+    ui->label_Baud->setEnabled(false);
+
     ui->disconnect->setEnabled(true);
-    ui->generalSlider->setEnabled(true);
-    ui->sliderValue->setEnabled(true);
-    ui->setPushButton->setEnabled(true);
+
+    SetControlsEnable(true);
 
     if( ui->radioButtonSerial->isChecked() )
     {
@@ -186,9 +188,8 @@ void MainWindow::ButtonDisconnect()
 
     ui->connect->setEnabled(true);
     ui->disconnect->setEnabled(false);
-    ui->generalSlider->setEnabled(false);
-    ui->sliderValue->setEnabled(false);
-    ui->setPushButton->setEnabled(false);
+
+    SetControlsEnable(false);
 
     if ( ui->radioButtonSerial->isChecked() )
     {
@@ -304,19 +305,7 @@ void MainWindow::timerEvent(QTimerEvent *event)
         timerCounter = 0;
     }
 
-
-
-
-
     GetData();
-
-
-
-
-
-
-
-
 }
 
 int MainWindow::TestHeaterButton()
@@ -417,10 +406,34 @@ void MainWindow::GetData()
     heaters[7] = dataValue.toInt();
     SetHeaters();
 
-//    ui->sliderValue->setValue(heaters[TestHeaterButton()-1]);
+    dataValue = dataBuffer.section(",",9,9);
+    fansRPMenable = dataValue.toInt();
 
+    if(fansRPMenable & 1)
+    {
+        ui->Fan1RPMEnabled->setChecked(true);
+        ui->rpm1Box->setEnabled(true);
+        ui->label_2->setEnabled(true);
+    }
+    else
+    {
+        ui->Fan1RPMEnabled->setChecked(false);
+        ui->rpm1Box->setEnabled(false);
+        ui->label_2->setEnabled(false);
+    }
 
-
+    if(fansRPMenable & 2)
+    {
+        ui->Fan2RPMEnabled->setChecked(true);
+        ui->rpm2Box->setEnabled(true);
+        ui->label_4->setEnabled(true);
+    }
+    else
+    {
+        ui->Fan2RPMEnabled->setChecked(false);
+        ui->rpm2Box->setEnabled(false);
+        ui->label_4->setEnabled(false);
+    }
 
     dataValue = dataBuffer.section(",",10,10);
     ui->temperatureBox->setValue(dataValue.toInt()/100);
@@ -450,4 +463,56 @@ void MainWindow::SendData()
         msgBox.setText("Wrong answer from device upon changing values! : " + receiveString);
         msgBox.exec();
     }
+}
+
+void MainWindow::SetControlsEnable(bool state)
+{
+    ui->generalSlider->setEnabled(state);
+    ui->sliderValue->setEnabled(state);
+    ui->setPushButton->setEnabled(state);
+    ui->label->setEnabled(state);
+    ui->label_2->setEnabled(state);
+    ui->label_3->setEnabled(state);
+    ui->label_4->setEnabled(state);
+    ui->label_5->setEnabled(state);
+    ui->label_6->setEnabled(state);
+    ui->label_7->setEnabled(state);
+    ui->label_8->setEnabled(state);
+    ui->label_9->setEnabled(state);
+    ui->label_10->setEnabled(state);
+    ui->label_11->setEnabled(state);
+    ui->label_12->setEnabled(state);
+    ui->label_13->setEnabled(state);
+    ui->label_14->setEnabled(state);
+    ui->label_15->setEnabled(state);
+    ui->label_16->setEnabled(state);
+    ui->label_17->setEnabled(state);
+
+    ui->radioButtonH1->setEnabled(state);
+    ui->radioButtonH2->setEnabled(state);
+    ui->radioButtonH3->setEnabled(state);
+    ui->radioButtonH4->setEnabled(state);
+    ui->radioButtonH5->setEnabled(state);
+    ui->radioButtonH6->setEnabled(state);
+    ui->radioButtonH7->setEnabled(state);
+    ui->radioButtonH8->setEnabled(state);
+
+    ui->heater1->setEnabled(state);
+    ui->heater2->setEnabled(state);
+    ui->heater3->setEnabled(state);
+    ui->heater4->setEnabled(state);
+    ui->heater5->setEnabled(state);
+    ui->heater6->setEnabled(state);
+    ui->heater7->setEnabled(state);
+    ui->heater8->setEnabled(state);
+
+    ui->Fan1RPMEnabled->setEnabled(state);
+    ui->Fan2RPMEnabled->setEnabled(state);
+
+    ui->rpm1Box->setEnabled(state);
+    ui->rpm2Box->setEnabled(state);
+
+    ui->temperatureBox->setEnabled(state);
+    ui->humidityBox->setEnabled(state);
+    ui->airPressureBox->setEnabled(state);
 }

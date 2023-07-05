@@ -20,7 +20,7 @@
 #include <Ethernet.h>
 
 
-#define DEBUG
+//#define DEBUG
 
 #define DEWHEATERCONTROLLERTIMEOUT 20000 // ms
 #define COMPORT 20002

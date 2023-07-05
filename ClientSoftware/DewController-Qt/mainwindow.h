@@ -49,6 +49,7 @@ private:
     void SendAndReceive(QString request, QString *response, int waitForSerial, int waitForEthernet);
     int TestHeaterButton();
     void SetHeaters();
+    void SetControlsEnable(bool state);
     int heaters[8];
     QSerialPort *m_serial = nullptr;
     int serialTimeout;

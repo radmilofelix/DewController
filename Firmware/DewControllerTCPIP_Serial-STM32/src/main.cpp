@@ -70,7 +70,6 @@ long GetRPM(int fanNumber)
 	  default:
 	  localRPM = 0;
   }
-//  Serial.print("GetRPM: "); Serial.println(localRPM,DEC);
   if(localRPM > 0)
   {
     localRPM = 60000000 / localRPM;
@@ -97,22 +96,17 @@ long GetDebouncedRPM(int fanNumber)
 	break;
   }
   long localRPM;
-//  for(int i=0; i<4; i++)
   for(int i=0; i<20; i++)
   {
 
     localRPM = GetRPM(fanNumber);
-	Serial.print("Fan number: "); Serial.print(fanNumber); Serial.print("   Local RPM: "); Serial.println(localRPM);
-//	if(localRPM > 0)
+//	Serial.print("Fan number: "); Serial.print(fanNumber); Serial.print("   Local RPM: "); Serial.println(localRPM);
+   	long diff = abs(rpm - localRPM);
+	if(diff < 100 && localRPM < 2000)
 	{
-    	long diff = abs(rpm - localRPM);
-   		if(diff < 100 && localRPM < 2000)
-   		{
-   			rpm = localRPM;
-    		return rpm;
-   		}
+		rpm = localRPM;
+		return rpm;
 	}
-//	delay(100);
   }
   if(localRPM > 2500)
   {
@@ -211,9 +205,6 @@ void setup()
 	dewControllerData.temperature = 0;
 	dewControllerData.airHumidity = 0;
 	dewControllerData.airPressure = 0;
-//	sensorTemperature = 0.;
-//	sensorAirHumidity = 0.;
-//	sensorAirPressure = 0.;  
 	for (int i = 0; i < 8; i++)
 	{
 		dewControllerData.pwmDevice[i] = 0;
@@ -253,13 +244,8 @@ bool IsTimerExpired(unsigned long *timer, unsigned long intervalSeconds)
 void PackData()
 {
 	PollDhtSensor();
-//	dewControllerData.rpm1 = GetDebouncedRPM(1);
-//	dewControllerData.rpm2 = GetDebouncedRPM(2);
 	char dataElement[100];
 	buffer[0] = 0;
-//	dewControllerData.temperature = sensorTemperature * 100;
-//	dewControllerData.airHumidity = sensorAirHumidity * 100;
-//	dewControllerData.airPressure = sensorAirPressure * 100;
 	itoa( dewControllerData.command, dataElement, 10);
 	strcat(buffer, dataElement);
 	strcat(buffer, ",");
@@ -329,19 +315,6 @@ void UnpackData(char* dataString)
 			case 9:
 				dewControllerData.fanRPMcapability = atoi(localString);
 				break;
-
-/*
-			case 10:
-				dewControllerData.temperature = atoi(localString);
-				break;
-			case 11:
-				dewControllerData.airHumidity = atoi(localString);
-				break;
-			case 12:
-				dewControllerData.airPressure = atoi(localString);
-				break;
-//*/
-
 			default:
 				break;
 			}
@@ -349,11 +322,6 @@ void UnpackData(char* dataString)
 		}
 
 	}
-//	localString[charCounter] = 0;
-//	dewControllerData.pwmLimitPercent[7] = atoi(localString);
-//	sensorTemperature = (float)dewControllerData.temperature / 100;
-//	sensorAirHumidity = (float)dewControllerData.airHumidity / 100;
-//	sensorAirPressure = (float)dewControllerData.airPressure / 100; 
 }
 
 void SetHeatersAndFans()
@@ -448,9 +416,6 @@ void PollDhtSensor()
 {
 	dewControllerData.temperature = dhtSensor.readTemperature()*100;
 	dewControllerData.airHumidity = dhtSensor.readHumidity()*100;
-
-//	sensorTemperature=dhtSensor.readTemperature();
-//	sensorAirHumidity=dhtSensor.readHumidity();
 }
 
 void ProcessRequests()
@@ -464,9 +429,7 @@ void ProcessRequests()
 #endif
 
 	if(!strcmp(buffer,"YOOHOO"))
-//	if(!strcmp(buffer,"DewHeaterController-Connect"))
 	{
-//		Serial.println("DewHeater connect received");
 		if(isTCPrequest)
 		{
 			dewDriverTimer = millis();
@@ -484,7 +447,6 @@ void ProcessRequests()
 		return;
 	}
 
-//	if(!strcmp(buffer,"GetData"))
 	if(!strcmp(buffer,"gd"))
 	{
 		dewControllerData.command = 11;
@@ -502,15 +464,15 @@ void ProcessRequests()
                       //UnpackData("2735,11,22,33,44,55,66,111,222,11,853,9025,51,52,53,54,55,56,57,58");
 					  // Serial.println(GetDebouncedRPM(), DEC);
 
-					  // 2735,0,0,0,0,0,0,0,0,11,853,9025,100,100,100,100,100,100,100,100
-					  // 2735,2,2,2,2,2,2,2,2,11,853,9025,100,100,100,100,100,100,100,100
-					  // 2735,4,4,4,4,4,4,4,4,11,853,9025,100,100,100,100,100,100,100,100
-					  // 2735,8,8,8,8,8,8,8,8,11,853,9025,100,100,100,100,100,100,100,100
-					  // 2735,16,16,16,16,16,16,16,16,11,853,9025,100,100,100,100,100,100,100,100
-					  // 2735,32,32,32,32,32,32,32,32,11,853,9025,100,100,100,100,100,100,100,100
-					  // 2735,64,64,64,64,64,64,64,64,11,853,9025,100,100,100,100,100,100,100,100
-					  // 2735,127,127,127,127,127,127,127,127,11,853,9025,100,100,100,100,100,100,100,100
-					  // 2735,255,255,255,255,255,255,255,255,255,853,9025,100,100,100,100,100,100,100,100
+					  // 2735,0,0,0,0,0,0,0,0,0,
+					  // 2735,2,2,2,2,2,2,2,2,0,
+					  // 2735,4,4,4,4,4,4,4,4,0,
+					  // 2735,8,8,8,8,8,8,8,8,0,
+					  // 2735,16,16,16,16,16,16,16,16,0
+					  // 2735,32,32,32,32,32,32,32,32,0
+					  // 2735,64,64,64,64,64,64,64,64,0,
+					  // 2735,127,127,127,127,127,127,127,127,0,
+					  // 2735,255,255,255,255,255,255,255,255,0,
 
 
 	{
@@ -525,17 +487,6 @@ void ProcessRequests()
 
 	buffer[0] = 0;
 }
-
-
-/*
-void DisplayTmperature()
-{
-	PollDhtSensor();
-	Serial.print("temperature: "); Serial.println(sensorTemperature);
-	Serial.print("airHumidity: "); Serial.println(sensorAirHumidity);
-	Serial.println();
-}
-*/
 
 void loop()
 {
@@ -609,18 +560,14 @@ void loop()
         //read the whole string.
   		isSerialrequest = true;
 		int bufferLen = Serial.readBytesUntil(0, buffer, 1024);
-//		int bufferLen = Serial.readBytesUntil(13, buffer, 1024);
 		buffer[bufferLen] = 0;
 	    buffer[strcspn(buffer, "\r")] = 0;
 	    buffer[strcspn(buffer, "\n")] = 0;
     }   
-//	Serial.print("Debounced RPM: "); Serial.println(GetDebouncedRPM(), DEC);
 	ProcessRequests();
  	isTCPrequest = false;
 	isTCPrequest1 = false;
-//	dewControllerData.rpm1 = GetDebouncedRPM(1);
-//	dewControllerData.rpm2 = GetDebouncedRPM(2);
-//	CheckConnections();
+	CheckConnections();
 }
 
 
