@@ -50,6 +50,7 @@ private:
     int TestHeaterButton();
     void SetHeaters();
     void SetControlsEnable(bool state);
+    void OnReadyRead();
     int heaters[8];
     QSerialPort *m_serial = nullptr;
     int serialTimeout;
@@ -60,14 +61,13 @@ private:
     bool timerUpdate;
     int timerCounter;
     QTcpSocket  _socket;
-    void OnReadyRead();
     bool connected;
     bool disconnectAlarm;
     int fansRPMenable;
+    int serialDisconnect;
 
 
 protected:
-//    void mtimerEvent();
     void timerEvent(QTimerEvent *event);
 
 };
