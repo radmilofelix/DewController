@@ -424,7 +424,7 @@ void ProcessRequests()
 		SelectAndSend((char*)CONFIRMATION);
 	}
 	
-	if ( !strncmp(buffer, SENDDATA, 4) )
+	if ( !strncmp(buffer, SETDATA, 4) )
 //	if (buffer[0] == '2' && buffer[1] == '8' && buffer[2] == '1'&& buffer[3] == '3' && buffer[4] == ',')
                       //UnpackData("2735,11,22,33,44,55,66,111,222,11,853,9025,51,52,53,54,55,56,57,58");
 					  // Serial.println(GetDebouncedRPM(), DEC);

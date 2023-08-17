@@ -23,7 +23,7 @@
 #define HARTBEATRESPONSE "2u2"
 #define GETDATA "gd"
 #define GETDATAHEADER "11"
-#define SENDDATA "2813,"
+#define SETDATA "2813,"
 #define CONFIRMATION "OK"
 #define GETRPM "grpm"
 

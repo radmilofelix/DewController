@@ -4,6 +4,9 @@
 #include <Ethernet.h>
 #include <sys/Time.h>
 
+
+#define DEBUG
+
 #define TCPTIMEOUT 10 // sec
 #define GREETING "Hello TCP client!"
 

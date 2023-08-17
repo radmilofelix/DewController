@@ -497,7 +497,7 @@ bool MainWindow::GetData()
 
 bool MainWindow::SendData()
 {
-    QString sendString = SENDDATA;
+    QString sendString = SETDATA;
     for(int i=0; i<8; i++)
     {
         sendString += QString::number(heaters[i]) + ",";
