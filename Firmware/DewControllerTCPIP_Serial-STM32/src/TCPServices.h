@@ -9,7 +9,6 @@
 
 
 //#define ESP8266BOARD
-
 #ifndef ESP8266BOARD
 	#include <SPI.h>
 	#include <Ethernet.h>
