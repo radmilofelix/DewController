@@ -14,21 +14,27 @@
 #include <DHT.h> 
 #include <Adafruit_BME280.h>
 
-//#include "commons.h"
-
 #include <SPI.h>
 #include <Ethernet.h>
 
+#include "TCPServices.h"
+#include "SerialServices.h"
 
 //#define DEBUG
 
-#define DEWHEATERCONTROLLERTIMEOUT 20000 // ms
-#define COMPORT 20002
-#define COMPORT1 20003
-#define TCPTIMEOUT 10 // sec
+#define TCPPORT 20002
+#define TCPPORT1 20003
 #define ANALOGWRITERESOLUTION 8 // default
 
 #define RESETPIN PB0
+
+#define HARTBEATCALL "YOOHOO"
+#define HARTBEATRESPONSE "2u2"
+#define GETDATA "gd"
+#define GETDATAHEADER 11
+#define SENDDATA "2813,"
+#define CONFIRMATION "OK"
+#define GETRPM "grpm"
 
 // Enter a MAC address and IP address for your controller below.
 // The IP address will be dependent on your local network.
@@ -53,21 +59,14 @@ struct DEWCONTROLLERDATA
 } dewControllerData;
 
 int pwmPin[32];
-//int pwmPin[8];
-//float sensorTemperature;
-//float sensorAirHumidity;
-//float sensorAirPressure;
-//int maxPWMvalue = pow(2, ANALOGWRITERESOLUTION) - 1;
-
 
 // Initialise the second serial port on STM32
 HardwareSerial Serial2(USART2);   // PA3  (RX)  PA2  (TX)
 
-EthernetServer server(COMPORT);
-EthernetClient client;
+TCPServices tcpservice(TCPPORT);
+TCPServices tcpservice1(TCPPORT1);
+SerialServices serialservices;
 
-EthernetServer server1(COMPORT1);
-EthernetClient client1;
 
 int dewHeaterDriverConnect = 0; 
 int dewHeaterDriverConnect1 = 0;
@@ -78,27 +77,17 @@ bool isTCPalreadyConnected1 = false;
 bool isTCPrequest = false;
 bool isTCPrequest1 = false;
 bool isSerialrequest = false;
-//float temperatureDht;
-//float humidityDht;
 char buffer[1025];  // 1k communication buffer
-//DHT dhtSensor;
 
-
-/*
-static bool is_high1;  // is the input currently HIGH?
-static uint32_t time_of_rise1;  // when did it rise?
-static bool is_high2;  // is the input currently HIGH?
-static uint32_t time_of_rise2;  // when did it rise?
-//*/
-
-bool IsTimerExpired(unsigned long *timer, unsigned long interval);
+void setup();
 void ReportDewHeaterDriverConnect();
 void ProcessRequests();
 void SetHeatersAndFans();
-void SendResponse(char* response);
+void SelectAndSend(char *response);
 int main ( int argument, char const *argv[] );
 void PollDhtSensor();
 long GetRPM(int fanNumber);
 long GetDebouncedRPM(int fanNumber);
+void HartBeat();
 
 #endif

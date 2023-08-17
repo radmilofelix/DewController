@@ -16,6 +16,18 @@
 #include <unistd.h>
 #endif
 
+#define RECONNECTRETRIES 5
+
+#define GREETING "Hello TCP client!"
+#define HARTBEATCALL "YOOHOO"
+#define HARTBEATRESPONSE "2u2"
+#define GETDATA "gd"
+#define GETDATAHEADER "11"
+#define SENDDATA "2813,"
+#define CONFIRMATION "OK"
+#define GETRPM "grpm"
+
+
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -36,8 +48,11 @@ private slots:
     void SliderReleased();
     void Set();
     void EnableFansRPM();
-    void GetData();
-    void SendData();
+    bool GetData();
+    bool SendData();
+    void KeepAlive();
+    bool PollRPM();
+    void MyTimerSlot();
 
 
 private:
@@ -55,20 +70,20 @@ private:
     QSerialPort *m_serial = nullptr;
     int serialTimeout;
     int readWriteDelay;
-    int timerId;
-    QTimerEvent *event;
+
+    QTimer *timer;
     QString dataBuffer;
     bool timerUpdate;
-    int timerCounter;
+    int timerCounter; // RPM poll counter
     QTcpSocket  _socket;
     bool connected;
-    bool disconnectAlarm;
+    bool disconnectAlarm; // true if connection fails
     int fansRPMenable;
-    int serialDisconnect;
+//    int serialDisconnect;
+	int reconnectRetries;
 
 
 protected:
-    void timerEvent(QTimerEvent *event);
 
 };
 #endif // MAINWINDOW_H

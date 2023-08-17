@@ -1,7 +1,7 @@
 /*
 Dew heater controller serving 2 TCP clients and a Serial client on Serial2
 
-Fo have only one TCP client, eliminate the following variables and the corresponding code:
+To have only one TCP client, eliminate the following variables and the corresponding code:
 EthernetClient client1;
 int dewHeaterDriverConnect1 = 0;
 unsigned long dewDriverTimer1;
@@ -40,84 +40,6 @@ long rpm = 0;
 int speed = 9999;
 DHT dhtSensor(DHTPIN,DHTTYPE);
 
-long GetRPM(int fanNumber)
-{
-  long localRPM;
-  switch(fanNumber)
-  {
-	  case 1:
-	  	if(dewControllerData.fanRPMcapability & 1)
-		{
-			localRPM = pulseInLong(RPMPIN1, HIGH)* MAGPOLES * 2; // duration of one rotation of the fan (us)//
-		}
-		else
-		{
-			localRPM = 0;
-		}
-	  break;
-	  
-	  case 2:
-	  	if(dewControllerData.fanRPMcapability & 2)
-		{
-			localRPM = pulseInLong(RPMPIN2, HIGH)* MAGPOLES * 2; // duration of one rotation of the fan (us)//
-		}
-		else
-		{
-			localRPM = 0;
-		}
-	  break;
-	  
-	  default:
-	  localRPM = 0;
-  }
-  if(localRPM > 0)
-  {
-    localRPM = 60000000 / localRPM;
-  }
-  return localRPM;
-}
-
-long GetDebouncedRPM(int fanNumber)
-{
-  switch(fanNumber)
-  {
-	case 1:
-		if(dewControllerData.pwmDevice[6] < 1 || !(dewControllerData.fanRPMcapability & 1 ))
-		{
-			return 0;
-		}
-	break;
-
-	case 2:
-		if(dewControllerData.pwmDevice[7] < 1 || !(dewControllerData.fanRPMcapability & 2 ))
-		{
-			return 0;
-		}
-	break;
-  }
-  long localRPM;
-  for(int i=0; i<20; i++)
-  {
-
-    localRPM = GetRPM(fanNumber);
-//	Serial.print("Fan number: "); Serial.print(fanNumber); Serial.print("   Local RPM: "); Serial.println(localRPM);
-   	long diff = abs(rpm - localRPM);
-	if(diff < 100 && localRPM < 2000)
-	{
-		rpm = localRPM;
-		return rpm;
-	}
-  }
-  if(localRPM > 2500)
-  {
-    rpm = 0;
-  }
-  else
-  {
-    rpm = localRPM;
-  }
-  return rpm;
-}
 
 void setup()
 {
@@ -193,7 +115,7 @@ void setup()
 	}
 
   // start listening for clients
-	server.begin();
+//	server.begin();
 
 #ifdef DEBUG
 	Serial.print("Dew controller IP address: ");
@@ -209,37 +131,88 @@ void setup()
 	{
 		dewControllerData.pwmDevice[i] = 0;
 	}
-}
+} // setup()
 
-bool IsTimerExpired(unsigned long *timer, unsigned long intervalSeconds)
+
+long GetRPM(int fanNumber)
 {
-	long long timeNow = *timer;
-	if( (timeNow + intervalSeconds*1000) > 4294967295 )
-	{
-		*timer = 0;
-		return false;
-	}
-	timeNow = millis();
-
-#ifdef DEBUG
-//	Serial.print("timer   timeNow: ");
-//	Serial.print(*timer);
-//	Serial.print("   ");
-//	Serial.println(timeNow);
-//	Serial.print("TimeNow - Timer:                                "); Serial.println(timeNow-*timer);
-#endif
-
-	if( (timeNow - *timer + intervalSeconds*1000) > 4294967295)
-	{
-		return false;
-	}
-	if( (timeNow - *timer) > (intervalSeconds * 1000) )
-	{
-		*timer = timeNow;
-		return true;
-	}
-	return false;
+  long localRPM;
+  switch(fanNumber)
+  {
+	  case 1:
+	  	if(dewControllerData.fanRPMcapability & 1)
+		{
+			localRPM = pulseInLong(RPMPIN1, HIGH)* MAGPOLES * 2; // duration of one rotation of the fan (us)//
+		}
+		else
+		{
+			localRPM = 0;
+		}
+	  break;
+	  
+	  case 2:
+	  	if(dewControllerData.fanRPMcapability & 2)
+		{
+			localRPM = pulseInLong(RPMPIN2, HIGH)* MAGPOLES * 2; // duration of one rotation of the fan (us)//
+		}
+		else
+		{
+			localRPM = 0;
+		}
+	  break;
+	  
+	  default:
+	  localRPM = 0;
+  }
+  if(localRPM > 0)
+  {
+    localRPM = 60000000 / localRPM;
+  }
+  return localRPM;
 }
+
+
+long GetDebouncedRPM(int fanNumber)
+{
+  switch(fanNumber)
+  {
+	case 1:
+		if(dewControllerData.pwmDevice[6] < 1 || !(dewControllerData.fanRPMcapability & 1 ))
+		{
+			return 0;
+		}
+	break;
+
+	case 2:
+		if(dewControllerData.pwmDevice[7] < 1 || !(dewControllerData.fanRPMcapability & 2 ))
+		{
+			return 0;
+		}
+	break;
+  }
+  long localRPM;
+  for(int i=0; i<20; i++)
+  {
+
+    localRPM = GetRPM(fanNumber);
+   	long diff = abs(rpm - localRPM);
+	if(diff < 100 && localRPM < 2000)
+	{
+		rpm = localRPM;
+		return rpm;
+	}
+  }
+  if(localRPM > 2500)
+  {
+    rpm = 0;
+  }
+  else
+  {
+    rpm = localRPM;
+  }
+  return rpm;
+}
+
 
 void PackData()
 {
@@ -287,6 +260,7 @@ void PackData()
 	buffer[i-1] = 0;
 }
 
+
 void UnpackData(char* dataString)
 {
 	char localString[100];
@@ -324,6 +298,7 @@ void UnpackData(char* dataString)
 	}
 }
 
+
 void SetHeatersAndFans()
 {
 	for(int i=0; i<8; i++)
@@ -331,6 +306,7 @@ void SetHeatersAndFans()
 		analogWrite(pwmPin[i], dewControllerData.pwmDevice[i]);
 	}
 }
+
 
 //*
 #ifdef DEBUG
@@ -366,57 +342,56 @@ void DisplayData()
 #endif
 //*/
 
-void CheckConnections()
-{
-	if(dewHeaterDriverConnect && isTCPalreadyConnected)
-	{
-		if( IsTimerExpired(&dewDriverTimer, TCPTIMEOUT) )
-		{
-			client.stop();
-			dewHeaterDriverConnect = 0;
-			isTCPalreadyConnected = false;
-			isTCPrequest = false;
-			#ifdef DEBUG
-			Serial.println("Lost connection with the dew heater TCP client, disconnecting.");
-			#endif
-		}
-	}
-
-	if(dewHeaterDriverConnect1 && isTCPalreadyConnected1)
-	{
-		if( IsTimerExpired(&dewDriverTimer1, 30) )
-		{
-			client1.stop();
-			dewHeaterDriverConnect1 = 0;
-			isTCPalreadyConnected1 = false;
-			isTCPrequest1 = false;
-			#ifdef DEBUG
-			Serial.println("Lost connection with the dew heater TCP client, disconnecting.");
-			#endif
-		}
-	}
-}
-
-void SendResponse(char* response)
-{
-	if(isTCPrequest)
-		client.println(response);
-	if(isTCPrequest1)
-		client1.println(response);
-	if(isSerialrequest)
-		Serial.println(response);
-
-	buffer[0] = 0;
-	isSerialrequest = false;
-	isTCPrequest = false;
-	isTCPrequest1 = false;
-}
 
 void PollDhtSensor()
 {
 	dewControllerData.temperature = dhtSensor.readTemperature()*100;
 	dewControllerData.airHumidity = dhtSensor.readHumidity()*100;
 }
+
+
+void HartBeat()
+{
+	char txBuffer[50];
+	strcpy(txBuffer, HARTBEATRESPONSE);
+
+	if(serialservices.isSerialRequest)
+	{
+		serialservices.SendResponse(txBuffer);
+	}
+
+	if(tcpservice.isTCPrequest)
+	{
+		tcpservice.clientTimer = millis();
+		tcpservice.clientConnect = 1;
+		tcpservice.SendResponse(txBuffer);
+	}
+	if(tcpservice1.isTCPrequest)
+	{
+		tcpservice1.clientTimer = millis();
+		tcpservice1.clientConnect = 1;
+		tcpservice1.SendResponse(txBuffer);
+	}
+}
+
+
+void SelectAndSend(char *response)
+{
+	if(serialservices.isSerialRequest)
+	{
+		serialservices.SendResponse(response);
+	}
+	if(tcpservice.isTCPrequest)
+	{
+		tcpservice.SendResponse(response);
+	}
+	if(tcpservice1.isTCPrequest)
+	{
+		tcpservice1.SendResponse(response);
+	}
+	buffer[0] = 0;
+}
+
 
 void ProcessRequests()
 {
@@ -428,39 +403,29 @@ void ProcessRequests()
 	}
 #endif
 
-	if(!strcmp(buffer,"YOOHOO"))
+	if(!strcmp(buffer,HARTBEATCALL))
 	{
-		if(isTCPrequest)
-		{
-			dewDriverTimer = millis();
-			dewHeaterDriverConnect = 1;
-		}
-		if(isTCPrequest1)
-		{
-			dewDriverTimer1 = millis();
-			dewHeaterDriverConnect1 = 1;
-		}
-		char txBuffer[50];
-		strcpy(txBuffer, "2u2");
-		isSerialrequest = true;
-		SendResponse(txBuffer);
+		HartBeat();
 		return;
 	}
 
-	if(!strcmp(buffer,"gd"))
+	if(!strcmp(buffer,GETDATA))
 	{
-		dewControllerData.command = 11;
+		dewControllerData.command = GETDATAHEADER;
 		PackData();
-		SendResponse(buffer);
+		SelectAndSend(buffer);
 		return;
 	}
 
-	if(!strcmp(buffer,"grpm"))
+	if(!strcmp(buffer,GETRPM))
 	{
 		dewControllerData.rpm1 = GetDebouncedRPM(1);
 		dewControllerData.rpm2 = GetDebouncedRPM(2);
+		SelectAndSend((char*)CONFIRMATION);
 	}
-	if (buffer[0] == '2' && buffer[1] == '8' && buffer[2] == '1'&& buffer[3] == '3' && buffer[4] == ',')
+	
+	if ( !strncmp(buffer, SENDDATA, 4) )
+//	if (buffer[0] == '2' && buffer[1] == '8' && buffer[2] == '1'&& buffer[3] == '3' && buffer[4] == ',')
                       //UnpackData("2735,11,22,33,44,55,66,111,222,11,853,9025,51,52,53,54,55,56,57,58");
 					  // Serial.println(GetDebouncedRPM(), DEC);
 
@@ -478,96 +443,22 @@ void ProcessRequests()
 	{
 		UnpackData(buffer);
 		SetHeatersAndFans();
-		SendResponse((char*)"OK");
+		SelectAndSend((char*)CONFIRMATION);
 		#ifdef DEBUG
 		DisplayData();
 		#endif
 		return;
 	}
-
 	buffer[0] = 0;
 }
 
+
 void loop()
 {
-// wait for a new client:
-  if (!isTCPalreadyConnected)
-  {
-  	client = server.available();
- // 	Serial.println("Client1 server available.");
-  }
-
-  if (!isTCPalreadyConnected1)
-  {
-  	client1 = server1.available();
- // 	Serial.println("Client2 server available.");
-  }
-
-  // when the client sends the first byte, say hello:
-  if (client)
-  {
-    if (!isTCPalreadyConnected)
-    {
-      // clear out the input buffer:
-      client.flush();
-#ifdef DEBUG
-      Serial.println("We have a new client-0");
-#endif
-      client.println("Hello, astronomer!");
-	  isTCPalreadyConnected = true;
-      dewHeaterDriverConnect = 1;
-	  dewDriverTimer = millis();
-    }
-    if (client.available() > 0)
-	{
-      // read the message from the client:
-      int bufferLen = client.read((uint8_t*)buffer, 1024);
-	  buffer[bufferLen] = 0;
-	  buffer[strcspn(buffer, "\r")] = 0;
-	  buffer[strcspn(buffer, "\n")] = 0;
-	  isTCPrequest = true;
-    }
-  }
-
-  if (client1)
-  {
-    if (!isTCPalreadyConnected1)
-    {
-      // clear out the input buffer:
-      client1.flush();
-#ifdef DEBUG
-      Serial.println("We have a new client-1");
-#endif
-      client1.println("Hello, astronomer!");
-	  isTCPalreadyConnected1 = true;
-      dewHeaterDriverConnect1 = 1;
-	  dewDriverTimer1 = millis();
-    }
-    if (client1.available() > 0)
-	{
-      // read the message from the client:
-      int bufferLen = client1.read((uint8_t*)buffer, 1024);
-	  buffer[bufferLen] = 0;
-	  buffer[strcspn(buffer, "\r")] = 0;
-	  buffer[strcspn(buffer, "\n")] = 0;
-	  isTCPrequest1 = true;
-    }
-  }
-
-    if (Serial.available() > 0)
-    {
-        //at least one character has been received.
-        //read the whole string.
-  		isSerialrequest = true;
-		int bufferLen = Serial.readBytesUntil(0, buffer, 1024);
-		buffer[bufferLen] = 0;
-	    buffer[strcspn(buffer, "\r")] = 0;
-	    buffer[strcspn(buffer, "\n")] = 0;
-    }   
+	tcpservice.CheckTCPClient(buffer);
+	tcpservice1.CheckTCPClient(buffer);
+	serialservices.CheckSerialClient(buffer);
 	ProcessRequests();
- 	isTCPrequest = false;
-	isTCPrequest1 = false;
-	CheckConnections();
+	tcpservice.CheckConnections();
+	tcpservice1.CheckConnections();
 }
-
-

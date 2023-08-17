@@ -7,9 +7,9 @@ MainWindow::MainWindow(QWidget *parent)
     , m_serial(new QSerialPort(this))
 {
     ui->setupUi(this);
-    timerId = startTimer(3000);
-//    timerId = startTimer(1000);
 
+    timer = new QTimer(this);
+    connect(timer, SIGNAL(timeout()), this, SLOT(MyTimerSlot()));
     connect(ui->radioButtonSerial, &QRadioButton::clicked, this, &MainWindow::EnableSerial);
     connect(ui->radioButtonNetwork, &QRadioButton::clicked, this, &MainWindow::EnableNetwork);
     connect(ui->connect, &QPushButton::clicked, this, &MainWindow::ButtonConnect);
@@ -25,13 +25,15 @@ MainWindow::MainWindow(QWidget *parent)
     #ifdef WINDOWS_SYSTEM
         ui->comPort->setText("15");
     #else
-        ui->comPort->setText("/dev/ttyUSB0");
+        ui->comPort->setText("/dev/indi-dewcontroller");
     #endif
     serialTimeout = 500; // ms
     readWriteDelay = 200; // ms
+    timer->start(3000);
     timerUpdate = false;
     timerCounter = 0;
     connected = false;
+	reconnectRetries = 0;
     disconnectAlarm = false;
     ui->comPort->setEnabled(true);
     ui->baud->setEnabled(true);
@@ -44,7 +46,7 @@ MainWindow::MainWindow(QWidget *parent)
     }
     fansRPMenable = 0;
     SetControlsEnable(false);
-    serialDisconnect = 0;
+    ui->radioButtonSerial->setChecked(true);
 }
 
 
@@ -83,7 +85,11 @@ void MainWindow::EnableNetwork()
 void MainWindow::OpenSerialPort()
 {
     int baudrate = ui->baud->value();
-    QString comportString = "COM" + ui->comPort->text();
+    #ifdef WINDOWS_SYSTEM
+        QString comportString = "COM" + ui->comPort->text();
+    #else
+        QString comportString = ui->comPort->text();
+    #endif
 
     m_serial->setPortName(comportString);
     m_serial->setBaudRate(baudrate);
@@ -95,11 +101,10 @@ void MainWindow::OpenSerialPort()
     QMessageBox msgBox;
     if (m_serial->open(QIODevice::ReadWrite))
     {
-//        msgBox.setText("Serial port connected.");
-//        msgBox.exec();
     }
     else
     {
+        disconnectAlarm = true;
         msgBox.setText("Could not open serial port.");
         msgBox.exec();
     }
@@ -116,6 +121,7 @@ void MainWindow::CloseSerialPort()
 void MainWindow::ConnectToHost()
 {
     QMessageBox msgBox;
+    disconnectAlarm = false;
     _socket.connectToHost(QHostAddress(ui->hostAddress->text()), ui->port->value());
     if( !_socket.isOpen() )
     {
@@ -126,16 +132,18 @@ void MainWindow::ConnectToHost()
         return;
     }
     SendAndReceive("\r\n", &dataBuffer, 500, 100);
-    if(dataBuffer.trimmed() != "Hello, astronomer!")
+    if(dataBuffer.trimmed() != GREETING)
     {
-        msgBox.setText("Could not connect to Dew Heaters Controller TCP device. Please try again in 20 seconds.");
-        msgBox.exec();
-        disconnectAlarm = true;
-        ButtonDisconnect();
-        return;
+        SendAndReceive(HARTBEATCALL, &dataBuffer, 500, 100);
+        if(dataBuffer.trimmed() != HARTBEATRESPONSE)
+        {
+            msgBox.setText("Could not connect to Dew Heaters Controller TCP device. If the IP address and port are correct, please try again in 20 seconds.");
+            msgBox.exec();
+            disconnectAlarm = true;
+            ButtonDisconnect();
+            return;
+        }
     }
-//    msgBox.setText("Connected to TCP host.");
-//    msgBox.exec();
 }
 
 
@@ -157,10 +165,13 @@ void MainWindow::ButtonConnect()
     }
     if(disconnectAlarm)
     {
+        ButtonDisconnect();
         return;
     }
     if(disconnectAlarm == true)
+    {
         disconnectAlarm = false;
+    }
     ui->radioButtonNetwork->setEnabled(false);
     ui->radioButtonSerial->setEnabled(false);
     ui->comPort->setEnabled(false);
@@ -171,29 +182,25 @@ void MainWindow::ButtonConnect()
     ui->label_ComPort->setEnabled(false);
     ui->label_Baud->setEnabled(false);
     ui->disconnect->setEnabled(true);
-    SetControlsEnable(true);
     GetData();
+    SetControlsEnable(true);
     connected = true;
 }
 
 
 void MainWindow::ButtonDisconnect()
 {
+    connected = false;
     QMessageBox msgBox;
     if( ui->radioButtonSerial->isChecked() )
     {
         CloseSerialPort();
-//        msgBox.setText("Serial port disconnected.");
-//        msgBox.exec();
     }
 
     if( ui->radioButtonNetwork->isChecked() )
     {
         DisconnectFromHost();
-//        msgBox.setText("Disconnected from network device.");
-//        msgBox.exec();
     }
-    connected = false;
     ui->radioButtonNetwork->setEnabled(true);
     ui->radioButtonSerial->setEnabled(true);
     ui->connect->setEnabled(true);
@@ -214,7 +221,7 @@ void MainWindow::ButtonDisconnect()
 
 void MainWindow::SendAndReceive(QString request, QString *response, int waitForSerial, int waitForEthernet)
 {
-    dataBuffer.clear();
+    qDebug() << request.trimmed();
     if( ui->radioButtonSerial->isChecked() )
     {
         m_serial->write(request.toStdString().data());
@@ -228,7 +235,6 @@ void MainWindow::SendAndReceive(QString request, QString *response, int waitForS
         _socket.write(request.toStdString().data());
         _socket.waitForBytesWritten(100);
         this->thread()->msleep(readWriteDelay);
-//        _socket.waitForReadyRead(15000);
         _socket.waitForReadyRead(waitForEthernet);
     }
 
@@ -244,11 +250,12 @@ void MainWindow::SendAndReceive(QString request, QString *response, int waitForS
         data = _socket.readAll();
     }
 
+    response->clear();
     if( !data.isEmpty() )
     {
-        response->clear();
         response->append(data);
     }
+    qDebug() << response->trimmed();
 }
 
 
@@ -270,69 +277,83 @@ void MainWindow::SliderReleased()
     SendData();
 }
 
+bool MainWindow::PollRPM()
+{
+    timerCounter++;
+    if(timerCounter > 5)
+    {
+        timerCounter = 0;
+    }
 
-void MainWindow::timerEvent(QTimerEvent *event)
+    if(timerCounter == 0 && (ui->Fan1RPMEnabled->isChecked() || ui->Fan2RPMEnabled->isChecked()) )
+    {
+        SendAndReceive(GETRPM, &dataBuffer, 500, 1000);
+        if(dataBuffer.trimmed() != CONFIRMATION)
+        {
+            return false;
+        }
+    }
+	return true;
+}
+
+void MainWindow::KeepAlive()
+{
+    SendAndReceive(HARTBEATCALL, &dataBuffer, 500, 100); // hartbeat
+    if(dataBuffer.trimmed() != HARTBEATRESPONSE)
+    {
+        reconnectRetries++;
+        if( reconnectRetries > RECONNECTRETRIES )
+        {
+            qDebug() << "Disconnect";
+            ButtonDisconnect();
+            qDebug() << "Connect";
+            ButtonConnect();
+            if( disconnectAlarm )
+            {
+                QMessageBox msgBox;
+                msgBox.setWindowTitle("Connection error");
+                msgBox.setInformativeText(QString("Lost connection to the device!"));
+                msgBox.exec();
+                reconnectRetries = 0;
+            }
+            else
+            {
+                qDebug() << "Hartbeat after reconnect";
+                SendAndReceive(HARTBEATCALL, &dataBuffer, 500, 100); // hartbeat
+                if(dataBuffer.trimmed() != HARTBEATRESPONSE)
+                {
+                    QMessageBox msgBox;
+                    msgBox.setWindowTitle("Hartbeat error");
+                    msgBox.setInformativeText(QString("Wrong hartbeat answer after reconnect! Disconnecting device."));
+                    msgBox.exec();
+                    ButtonDisconnect();
+                    reconnectRetries = 0;
+                }
+            }
+        }
+        return;
+    }
+    else
+    {
+        reconnectRetries = 0;
+    }
+}
+
+
+void MainWindow::MyTimerSlot()
 {
     if(!connected)
     {
         return;
     }
-    SendAndReceive("YOOHOO", &dataBuffer, 500, 100); // hartbeat
-//    qDebug() << dataBuffer.trimmed();
-    if(dataBuffer.trimmed() != "2u2")
+    KeepAlive();
+    if( !PollRPM())
     {
-        if( ui->radioButtonNetwork->isChecked() )
-        {
-            QMessageBox msgBox;
-            msgBox.setText("Wrong connection response, disconnecting, device-timerEvent");
-            msgBox.exec();
-            ButtonDisconnect();
-            return;
-        }
-        QByteArray data;
-        if( ui->radioButtonSerial->isChecked() )
-        {
-            serialDisconnect ++;
-            data = m_serial->readAll();
-            if( !data.isEmpty() )
-            {
-                dataBuffer.clear();
-                dataBuffer.append(data);
-            }
-            if(dataBuffer.trimmed() != "2u2")
-            {
-                QMessageBox msgBox;
-                msgBox.setText("Wrong connection response, device-timerEvent");
-                msgBox.exec();
-                msgBox.setText(dataBuffer.trimmed());
-                msgBox.exec();
-            }
-            if(serialDisconnect > 3)
-            {
-                QMessageBox msgBox;
-                msgBox.setText("Wrong connection response, disconnecting, device-timerEvent");
-                msgBox.exec();
-                ButtonDisconnect();
-                serialDisconnect = 0;
-            }
-            return;
-        }
+        KeepAlive();
     }
-    else
+    if( !GetData())
     {
-        serialDisconnect = 0;
-    }
-    if(timerCounter == 0 && (ui->Fan1RPMEnabled->isChecked() || ui->Fan2RPMEnabled->isChecked()) )
-    {
-        SendAndReceive("grpm", &dataBuffer, 500, 1000);
-    }
-    else
-        GetData();
-
-    timerCounter++;
-    if(timerCounter > 5)
-    {
-        timerCounter = 0;
+        KeepAlive();
     }
 }
 
@@ -405,14 +426,12 @@ void MainWindow::EnableFansRPM()
     SendData();
 }
 
-void MainWindow::GetData()
+bool MainWindow::GetData()
 {
-    SendAndReceive("gd", &dataBuffer, 500, 1000);
-    if(dataBuffer.left(2) != "11")
+    SendAndReceive(GETDATA, &dataBuffer, 500, 1000);
+    if(dataBuffer.left(2) != GETDATAHEADER)
     {
-        QMessageBox msgBox;
-        msgBox.setText("Wrong answer from device upon data request");
-        msgBox.exec();
+        return false;
     }
 
     QString dataValue = dataBuffer.section(",",1,1);
@@ -473,11 +492,12 @@ void MainWindow::GetData()
     ui->rpm1Box->setValue(dataValue.toInt());
     dataValue = dataBuffer.section(",",14,14);
     ui->rpm2Box->setValue(dataValue.toInt());
+    return true;
 }
 
-void MainWindow::SendData()
+bool MainWindow::SendData()
 {
-    QString sendString = "2813,";
+    QString sendString = SENDDATA;
     for(int i=0; i<8; i++)
     {
         sendString += QString::number(heaters[i]) + ",";
@@ -485,12 +505,11 @@ void MainWindow::SendData()
     sendString += QString::number(fansRPMenable) + ",";
     QString receiveString;
     SendAndReceive(sendString, &receiveString, 500, 100);
-    if(receiveString.trimmed() != "OK")
+    if(receiveString.trimmed() != CONFIRMATION)
     {
-        QMessageBox msgBox;
-        msgBox.setText("Wrong answer from device upon changing values! : " + receiveString);
-        msgBox.exec();
+        return false;
     }
+    return true;
 }
 
 void MainWindow::SetControlsEnable(bool state)
@@ -520,13 +539,13 @@ void MainWindow::SetControlsEnable(bool state)
     if(state)
     {
         ui->label_16->setText("<font color=#FF0000>Do not enable RPM reading if the fan</font>");
-        ui->label_17->setText("<font color=#FF0000>has no rpm capabilities or is not connected!</font>");
+        ui->label_17->setText("<font color=#FF0000>has no rpm capabilities or it is not connected!</font>");
         ui->label_18->setText("<span style=' font-size:9pt; font-weight:1000; color:#0000FF;'>CONNECTED</span>");
     }
     else
     {
         ui->label_16->setText("<font color='white'>Do not enable RPM reading if the fan</font>");
-        ui->label_17->setText("<font color='white'>has no rpm capabilities or is not connected!</font>");
+        ui->label_17->setText("<font color='white'>has no rpm capabilities or it is not connected!</font>");
         ui->label_18->setText("<span style=' font-size:9pt; font-weight:1000; color:#FF0000;'>DISCONNECTED</span>");
     }
 
