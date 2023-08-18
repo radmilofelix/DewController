@@ -48,10 +48,6 @@ private slots:
     void SliderReleased();
     void Set();
     void EnableFansRPM();
-    bool GetData();
-    bool SendData();
-    void KeepAlive();
-    bool PollRPM();
     void MyTimerSlot();
 
 
@@ -66,6 +62,11 @@ private:
     void SetHeaters();
     void SetControlsEnable(bool state);
     void OnReadyRead();
+    bool GetData();
+    bool SendData();
+    void KeepAlive();
+    bool PollRPM();
+
     int heaters[8];
     QSerialPort *m_serial = nullptr;
     int serialTimeout;
