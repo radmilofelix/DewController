@@ -40,7 +40,7 @@
 // The IP address will be dependent on your local network.
 // gateway and subnet are optional:
 byte mac[] = {
-  0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
+  0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xEA };
 IPAddress ip(192, 168, 111, 177);
 //IPAddress myDns(192, 168, 111, 1);
 //IPAddress gateway(192, 168, 111, 1);
