@@ -332,7 +332,6 @@ DIST          = /home/radmilo/Qt/6.5.1/gcc_64/mkspecs/features/spec_pre.prf \
 		/home/radmilo/Qt/6.5.1/gcc_64/mkspecs/features/qt_config.prf \
 		/home/radmilo/Qt/6.5.1/gcc_64/mkspecs/linux-g++/qmake.conf \
 		/home/radmilo/Qt/6.5.1/gcc_64/mkspecs/features/spec_post.prf \
-		.qmake.stash \
 		/home/radmilo/Qt/6.5.1/gcc_64/mkspecs/features/exclusive_builds.prf \
 		/home/radmilo/Qt/6.5.1/gcc_64/mkspecs/features/toolchain.prf \
 		/home/radmilo/Qt/6.5.1/gcc_64/mkspecs/features/default_pre.prf \
@@ -641,7 +640,6 @@ Makefile: DewController.pro /home/radmilo/Qt/6.5.1/gcc_64/mkspecs/linux-g++/qmak
 		/home/radmilo/Qt/6.5.1/gcc_64/mkspecs/features/qt_config.prf \
 		/home/radmilo/Qt/6.5.1/gcc_64/mkspecs/linux-g++/qmake.conf \
 		/home/radmilo/Qt/6.5.1/gcc_64/mkspecs/features/spec_post.prf \
-		.qmake.stash \
 		/home/radmilo/Qt/6.5.1/gcc_64/mkspecs/features/exclusive_builds.prf \
 		/home/radmilo/Qt/6.5.1/gcc_64/mkspecs/features/toolchain.prf \
 		/home/radmilo/Qt/6.5.1/gcc_64/mkspecs/features/default_pre.prf \
@@ -944,7 +942,6 @@ Makefile: DewController.pro /home/radmilo/Qt/6.5.1/gcc_64/mkspecs/linux-g++/qmak
 /home/radmilo/Qt/6.5.1/gcc_64/mkspecs/features/qt_config.prf:
 /home/radmilo/Qt/6.5.1/gcc_64/mkspecs/linux-g++/qmake.conf:
 /home/radmilo/Qt/6.5.1/gcc_64/mkspecs/features/spec_post.prf:
-.qmake.stash:
 /home/radmilo/Qt/6.5.1/gcc_64/mkspecs/features/exclusive_builds.prf:
 /home/radmilo/Qt/6.5.1/gcc_64/mkspecs/features/toolchain.prf:
 /home/radmilo/Qt/6.5.1/gcc_64/mkspecs/features/default_pre.prf:
@@ -1205,7 +1202,7 @@ moc_mainwindow.cpp: mainwindow.h \
 		/home/radmilo/Qt/6.5.1/gcc_64/include/QtCore/qelapsedtimer.h \
 		moc_predefs.h \
 		/home/radmilo/Qt/6.5.1/gcc_64/libexec/moc
-	/home/radmilo/Qt/6.5.1/gcc_64/libexec/moc $(DEFINES) --include /data/_Projects-s/DewController/Software/DewController-Qt/moc_predefs.h -I/home/radmilo/Qt/6.5.1/gcc_64/mkspecs/linux-g++ -I/data/_Projects-s/DewController/Software/DewController-Qt -I/home/radmilo/Qt/6.5.1/gcc_64/include -I/home/radmilo/Qt/6.5.1/gcc_64/include/QtWidgets -I/home/radmilo/Qt/6.5.1/gcc_64/include/QtGui -I/home/radmilo/Qt/6.5.1/gcc_64/include/QtNetwork -I/home/radmilo/Qt/6.5.1/gcc_64/include/QtSerialPort -I/home/radmilo/Qt/6.5.1/gcc_64/include/QtCore -IC:/Qt/Tools/mingw1120_64/lib/gcc/x86_64-w64-mingw32/11.2.0/include/c++ -IC:/Qt/Tools/mingw1120_64/lib/gcc/x86_64-w64-mingw32/11.2.0/include/c++/x86_64-w64-mingw32 -IC:/Qt/Tools/mingw1120_64/lib/gcc/x86_64-w64-mingw32/11.2.0/include/c++/backward -IC:/Qt/Tools/mingw1120_64/lib/gcc/x86_64-w64-mingw32/11.2.0/include -IC:/Qt/Tools/mingw1120_64/lib/gcc/x86_64-w64-mingw32/11.2.0/include-fixed -IC:/Qt/Tools/mingw1120_64/x86_64-w64-mingw32/include mainwindow.h -o moc_mainwindow.cpp
+	/home/radmilo/Qt/6.5.1/gcc_64/libexec/moc $(DEFINES) --include /data/_Projects-s/DewController/Software/DewController-Qt/moc_predefs.h -I/home/radmilo/Qt/6.5.1/gcc_64/mkspecs/linux-g++ -I/data/_Projects-s/DewController/Software/DewController-Qt -I/home/radmilo/Qt/6.5.1/gcc_64/include -I/home/radmilo/Qt/6.5.1/gcc_64/include/QtWidgets -I/home/radmilo/Qt/6.5.1/gcc_64/include/QtGui -I/home/radmilo/Qt/6.5.1/gcc_64/include/QtNetwork -I/home/radmilo/Qt/6.5.1/gcc_64/include/QtSerialPort -I/home/radmilo/Qt/6.5.1/gcc_64/include/QtCore -I/usr/include/c++/11 -I/usr/include/x86_64-linux-gnu/c++/11 -I/usr/include/c++/11/backward -I/usr/lib/gcc/x86_64-linux-gnu/11/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include mainwindow.h -o moc_mainwindow.cpp
 
 compiler_moc_objc_header_make_all:
 compiler_moc_objc_header_clean:
@@ -1609,62 +1606,7 @@ mainwindow.o: mainwindow.cpp mainwindow.h \
 		/home/radmilo/Qt/6.5.1/gcc_64/include/QtCore/qthread.h \
 		/home/radmilo/Qt/6.5.1/gcc_64/include/QtCore/qdeadlinetimer.h \
 		/home/radmilo/Qt/6.5.1/gcc_64/include/QtCore/qelapsedtimer.h \
-		ui_mainwindow.h \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtCore/QVariant \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtWidgets/QApplication \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtWidgets/qapplication.h \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtCore/qcoreapplication.h \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtCore/qeventloop.h \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtCore/qcoreapplication_platform.h \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtCore/qfuture.h \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtCore/qfutureinterface.h \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtCore/qmutex.h \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtCore/qtsan_impl.h \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtCore/qresultstore.h \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtCore/qfuture_impl.h \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtCore/qthreadpool.h \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtCore/qrunnable.h \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtCore/qexception.h \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtCore/qpromise.h \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtGui/qguiapplication.h \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtGui/qinputmethod.h \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtCore/qlocale.h \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtGui/qguiapplication_platform.h \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtWidgets/QButtonGroup \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtWidgets/qbuttongroup.h \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtWidgets/QCheckBox \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtWidgets/qcheckbox.h \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtWidgets/qabstractbutton.h \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtWidgets/QFrame \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtWidgets/qframe.h \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtWidgets/QLabel \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtWidgets/qlabel.h \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtGui/qpicture.h \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtGui/qtextdocument.h \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtWidgets/QLineEdit \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtWidgets/qlineedit.h \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtGui/qtextcursor.h \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtGui/qtextformat.h \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtGui/qpen.h \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtGui/qtextoption.h \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtWidgets/QMenuBar \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtWidgets/qmenubar.h \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtWidgets/qmenu.h \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtWidgets/QPushButton \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtWidgets/qpushbutton.h \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtWidgets/QRadioButton \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtWidgets/qradiobutton.h \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtWidgets/QSlider \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtWidgets/qslider.h \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtWidgets/qabstractslider.h \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtWidgets/QSpinBox \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtWidgets/qspinbox.h \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtWidgets/qabstractspinbox.h \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtGui/qvalidator.h \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtCore/qregularexpression.h \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtWidgets/QStatusBar \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtWidgets/qstatusbar.h \
-		/home/radmilo/Qt/6.5.1/gcc_64/include/QtWidgets/QWidget
+		ui_mainwindow.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o mainwindow.o mainwindow.cpp
 
 moc_mainwindow.o: moc_mainwindow.cpp 

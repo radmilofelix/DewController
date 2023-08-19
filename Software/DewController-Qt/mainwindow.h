@@ -8,6 +8,8 @@
 #include <QTimer>
 #include <QThread>
 
+#define DEBUG
+
 #define WINDOWS_SYSTEM
 
 #ifdef WINDOWS_SYSTEM

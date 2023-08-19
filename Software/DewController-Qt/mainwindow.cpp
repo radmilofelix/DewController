@@ -221,7 +221,9 @@ void MainWindow::ButtonDisconnect()
 
 void MainWindow::SendAndReceive(QString request, QString *response, int waitForSerial, int waitForEthernet)
 {
+#ifdef DEBUG
     qDebug() << request.trimmed();
+#endif
     if( ui->radioButtonSerial->isChecked() )
     {
         m_serial->write(request.toStdString().data());
@@ -255,7 +257,9 @@ void MainWindow::SendAndReceive(QString request, QString *response, int waitForS
     {
         response->append(data);
     }
+#ifdef DEBUG
     qDebug() << response->trimmed();
+#endif
 }
 
 
@@ -304,9 +308,13 @@ void MainWindow::KeepAlive()
         reconnectRetries++;
         if( reconnectRetries > RECONNECTRETRIES )
         {
+#ifdef DEBUG
             qDebug() << "Disconnect";
+#endif
             ButtonDisconnect();
+#ifdef DEBUG
             qDebug() << "Connect";
+#endif
             ButtonConnect();
             if( disconnectAlarm )
             {
@@ -318,7 +326,9 @@ void MainWindow::KeepAlive()
             }
             else
             {
+#ifdef DEBUG
                 qDebug() << "Hartbeat after reconnect";
+#endif
                 SendAndReceive(HARTBEATCALL, &dataBuffer, 500, 100); // hartbeat
                 if(dataBuffer.trimmed() != HARTBEATRESPONSE)
                 {
