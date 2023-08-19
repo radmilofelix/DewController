@@ -39,8 +39,11 @@
 // Enter a MAC address and IP address for your controller below.
 // The IP address will be dependent on your local network.
 // gateway and subnet are optional:
-byte mac[] = {
-  0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xEA };
+byte mac[] =
+{
+//  0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0x01 // black DHT
+  0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0x02 // white DHT
+};
 IPAddress ip(192, 168, 111, 177);
 //IPAddress myDns(192, 168, 111, 1);
 //IPAddress gateway(192, 168, 111, 1);
