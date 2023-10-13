@@ -6,17 +6,31 @@
 
 #IncludeRegexTransform: 
 
-/home/pi/indi-dewheaterandfan/dewheaterandfan.cpp
+/home/radmilo/programming/indi-drivers/indi-dewheaterandfan/StringParse.cpp
+StringParse.h
+/home/radmilo/programming/indi-drivers/indi-dewheaterandfan/StringParse.h
+defaultdevice.h
+-
+
+/home/radmilo/programming/indi-drivers/indi-dewheaterandfan/StringParse.h
+iostream
+-
+sstream
+-
+vector
+-
+
+/home/radmilo/programming/indi-drivers/indi-dewheaterandfan/dewheaterandfan.cpp
 dewheaterandfan.h
-/home/pi/indi-dewheaterandfan/dewheaterandfan.h
-connectionplugins/connectioninterface.h
-/home/pi/indi-dewheaterandfan/connectionplugins/connectioninterface.h
+/home/radmilo/programming/indi-drivers/indi-dewheaterandfan/dewheaterandfan.h
+
+/home/radmilo/programming/indi-drivers/indi-dewheaterandfan/dewheaterandfan.h
 connectionplugins/connectionserial.h
-/home/pi/indi-dewheaterandfan/connectionplugins/connectionserial.h
+/home/radmilo/programming/indi-drivers/indi-dewheaterandfan/connectionplugins/connectionserial.h
 connectionplugins/connectiontcp.h
-/home/pi/indi-dewheaterandfan/connectionplugins/connectiontcp.h
+/home/radmilo/programming/indi-drivers/indi-dewheaterandfan/connectionplugins/connectiontcp.h
 indicom.h
-/home/pi/indi-dewheaterandfan/indicom.h
+/home/radmilo/programming/indi-drivers/indi-dewheaterandfan/indicom.h
 cmath
 -
 cstring
@@ -27,10 +41,16 @@ termios.h
 -
 unistd.h
 -
-
-/home/pi/indi-dewheaterandfan/dewheaterandfan.h
+ctime
+-
+cerrno
+-
+regex
+-
 defaultdevice.h
 -
+StringParse.h
+/home/radmilo/programming/indi-drivers/indi-dewheaterandfan/StringParse.h
 
 /usr/include/libindi/basedevice.h
 indibase.h
@@ -39,14 +59,22 @@ indiproperty.h
 /usr/include/libindi/indiproperty.h
 indiproperties.h
 /usr/include/libindi/indiproperties.h
-indiutility.h
-/usr/include/libindi/indiutility.h
 string
 -
 vector
 -
 cstdint
 -
+indipropertytext.h
+/usr/include/libindi/indipropertytext.h
+indipropertynumber.h
+/usr/include/libindi/indipropertynumber.h
+indipropertyswitch.h
+/usr/include/libindi/indipropertyswitch.h
+indipropertylight.h
+/usr/include/libindi/indipropertylight.h
+indipropertyblob.h
+/usr/include/libindi/indipropertyblob.h
 
 /usr/include/libindi/connectionplugins/connectioninterface.h
 indidevapi.h
@@ -63,6 +91,8 @@ string
 -
 vector
 -
+cstdint
+-
 
 /usr/include/libindi/connectionplugins/connectiontcp.h
 connectioninterface.h
@@ -75,8 +105,8 @@ string
 -
 
 /usr/include/libindi/defaultdevice.h
-basedevice.h
-/usr/include/libindi/basedevice.h
+parentdevice.h
+/usr/include/libindi/parentdevice.h
 indidriver.h
 /usr/include/libindi/indidriver.h
 indilogger.h
@@ -87,6 +117,8 @@ stdint.h
 /usr/include/libindi/indiapi.h
 stdio.h
 -
+sharedblob.h
+/usr/include/libindi/sharedblob.h
 
 /usr/include/libindi/indibase.h
 indiapi.h
@@ -95,6 +127,8 @@ indidevapi.h
 /usr/include/libindi/indidevapi.h
 indibasetypes.h
 /usr/include/libindi/indibasetypes.h
+indiapi.h
+/usr/include/libindi/indiapi.h
 
 /usr/include/libindi/indibasetypes.h
 
@@ -107,12 +141,16 @@ indiapi.h
 /usr/include/libindi/indiapi.h
 lilxml.h
 /usr/include/libindi/lilxml.h
+sharedblob.h
+/usr/include/libindi/sharedblob.h
 
 /usr/include/libindi/indidriver.h
 indiapi.h
 /usr/include/libindi/indiapi.h
 lilxml.h
 /usr/include/libindi/lilxml.h
+indicom.h
+/usr/include/libindi/indicom.h
 stdio.h
 -
 
@@ -135,6 +173,12 @@ sys/time.h
 -
 
 /usr/include/libindi/indimacros.h
+BaseTsd.h
+-
+unistd.h
+-
+memory
+-
 
 /usr/include/libindi/indiproperties.h
 indiproperty.h
@@ -155,14 +199,44 @@ indiutility.h
 /usr/include/libindi/indiutility.h
 indipropertyview.h
 /usr/include/libindi/indipropertyview.h
-indidriver.h
-/usr/include/libindi/indidriver.h
 memory
 -
 cstdarg
 -
+functional
+-
 QMetaType
 -
+
+/usr/include/libindi/indipropertybasic.h
+indiproperty.h
+/usr/include/libindi/indiproperty.h
+indimacros.h
+/usr/include/libindi/indimacros.h
+algorithm
+-
+
+/usr/include/libindi/indipropertyblob.h
+indipropertybasic.h
+/usr/include/libindi/indipropertybasic.h
+
+/usr/include/libindi/indipropertylight.h
+indipropertybasic.h
+/usr/include/libindi/indipropertybasic.h
+
+/usr/include/libindi/indipropertynumber.h
+indipropertybasic.h
+/usr/include/libindi/indipropertybasic.h
+
+/usr/include/libindi/indipropertyswitch.h
+indipropertybasic.h
+/usr/include/libindi/indipropertybasic.h
+map
+-
+
+/usr/include/libindi/indipropertytext.h
+indipropertybasic.h
+/usr/include/libindi/indipropertybasic.h
 
 /usr/include/libindi/indipropertyview.h
 indiapi.h
@@ -171,8 +245,6 @@ indidevapi.h
 /usr/include/libindi/indidevapi.h
 indiwidgettraits.h
 /usr/include/libindi/indiwidgettraits.h
-indidriver.h
-/usr/include/libindi/indidriver.h
 indiwidgetview.h
 /usr/include/libindi/indiwidgetview.h
 string
@@ -189,16 +261,22 @@ type_traits
 /usr/include/libindi/indiutility.h
 string
 -
+cstring
+-
 sys/stat.h
 -
 ctime
 -
 indimacros.h
 /usr/include/libindi/indimacros.h
+string.h
+-
 
 /usr/include/libindi/indiwidgettraits.h
 indiapi.h
 /usr/include/libindi/indiapi.h
+indiutility.h
+/usr/include/libindi/indiutility.h
 
 /usr/include/libindi/indiwidgetview.h
 indipropertyview.h
@@ -209,4 +287,10 @@ lilxml.h
 -
 stdio.h
 -
+
+/usr/include/libindi/parentdevice.h
+basedevice.h
+/usr/include/libindi/basedevice.h
+
+/usr/include/libindi/sharedblob.h
 

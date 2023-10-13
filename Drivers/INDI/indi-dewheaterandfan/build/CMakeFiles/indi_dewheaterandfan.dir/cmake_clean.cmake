@@ -1,4 +1,5 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/indi_dewheaterandfan.dir/StringParse.o"
   "CMakeFiles/indi_dewheaterandfan.dir/dewheaterandfan.o"
   "indi_dewheaterandfan"
   "indi_dewheaterandfan.pdb"

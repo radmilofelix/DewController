@@ -4,7 +4,8 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
-  "/home/pi/indi-dewheaterandfan/dewheaterandfan.cpp" "/home/pi/indi-dewheaterandfan/build/CMakeFiles/indi_dewheaterandfan.dir/dewheaterandfan.o"
+  "/home/radmilo/programming/indi-drivers/indi-dewheaterandfan/StringParse.cpp" "/home/radmilo/programming/indi-drivers/indi-dewheaterandfan/build/CMakeFiles/indi_dewheaterandfan.dir/StringParse.o"
+  "/home/radmilo/programming/indi-drivers/indi-dewheaterandfan/dewheaterandfan.cpp" "/home/radmilo/programming/indi-drivers/indi-dewheaterandfan/build/CMakeFiles/indi_dewheaterandfan.dir/dewheaterandfan.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
 

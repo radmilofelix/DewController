@@ -21,66 +21,46 @@
 
 */
 
+#include "connectionplugins/connectionserial.h"
+#include "connectionplugins/connectiontcp.h"
+#include "indicom.h"
+
+#include <cmath>
+#include <cstring>
+#include <memory>
+#include <termios.h>
+#include <unistd.h>
+
+#include <ctime>
+#include <cerrno>
+#include <regex>
+
 #pragma once
 #include <defaultdevice.h>
+#include "StringParse.h"
 
-#define DEWDEBUG
-#define TCPIPDEVICE
+// Network
 #define TIMERHIT_VALUE 1000 // milliseconds
-#define DEW_TCP_TIMEOUT 3
+#define TCPRETRIES 5
+#define CONNECTIONRETRIES 5
+#define COMMANDRETRIES 5
+#define TCP_TIMEOUT 3
+#define TCPSTOPCHAR '\n'
 
-/***************************** USB_Dewpoint Commands **************************/
+//      Communication
+#define HARTBEATCALL "YOOHOO\n"
+#define HARTBEATRESPONSE "2u2"
+#define GETDATA "gd"
+#define GETDATAHEADER "11"
+#define SETDATA "2813,"
+#define CONFIRMATION "OK"
+#define GETRPM "grpm"
+#define DATADELIMITER ","
 
-// All commands are exactly 6 bytes, no start/end markers
-#define UDP_CMD_LEN 6
-#define UDP_STATUS_CMD "SGETAL"
-#define UDP_OUTPUT_CMD "S%1uO%03u"         // channel 1-3, power 0-100
-#define UDP_THRESHOLD_CMD "STHR%1u%1u"     // channel 1-2, value 0-9
-#define UDP_CALIBRATION_CMD "SCA%1u%1u%1u" // channel 1-2-A, value 0-9
-#define UDP_LINK_CMD "SLINK%1u"            // 0 or 1 to link channels 2 and 3
-#define UDP_AUTO_CMD "SAUTO%1u"            // 0 or 1 to enable auto mode
-#define UDP_AGGRESSIVITY_CMD "SAGGR%1u"    // 1-4 (1, 2, 5, 10)
-#define UDP_IDENTIFY_CMD "SWHOIS"
-#define UDP_RESET_CMD "SEERAZ"
-
-/**************************** USB_Dewpoint Constants **************************/
-
-// Responses also include "\n\r"
-#define UDP_DONE_RESPONSE "DONE"
-#define UDP_RES_LEN 80 // With some margin, maximum feasible seems to be around 70
-
-// Status response is like:
-// ##22.37/22.62/23.35/50.77/12.55/0/0/0/0/0/0/2/2/0/0/4**
-
-// Fields are in order:
-// temperature ch 1
-// temperature ch 2
-// temperature ambient
-// relative humidity
-// dew point
-// output ch 1
-// output ch 2
-// output ch 3
-// calibration ch 1
-// calibration ch 2
-// calibration ambient
-// threshold ch 1
-// threshold ch 2
-// auto mode
-// outputs ch 2 & 3 linked
-// aggressivity
-
-#define UDP_STATUS_RESPONSE "##%f/%f/%f/%f/%f/%u/%u/%u/%u/%u/%u/%u/%u/%u/%u/%u**"
-#define UDP_STATUS_START "##"
-#define UDP_STATUS_SEPARATOR "/"
-#define UDP_STATUS_END "**"
-#define UDP_IDENTIFY_RESPONSE "UDP2(%u)" // Firmware version? Mine is "UDP2(1446)"
-
-/******************************************************************************/
 
 namespace Connection
 {
-class Serial;
+	class Serial;
 };
 
 class DewHeaterAndFan : public INDI::DefaultDevice
@@ -95,74 +75,48 @@ class DewHeaterAndFan : public INDI::DefaultDevice
     virtual bool ISNewNumber(const char *dev, const char *name, double values[], char *names[], int n) override;
     virtual bool ISNewSwitch(const char *dev, const char *name, ISState *states, char *names[], int n) override;
     virtual void TimerHit() override;
+    bool TestConnection();
+    std::string buffer;
+
+    typedef enum
+    {
+        CONNECTION_NONE   = 1 << 0,
+        CONNECTION_SERIAL = 1 << 1,
+        CONNECTION_TCP    = 1 << 2
+    } HeaterConnection;
+
 
   private:
-    bool sendCommand(const char *cmd, char *response);
+    bool SendCommand(std::string request, std::string expectedResponse, std::string delimiter);
+	uint8_t heaterConnection { CONNECTION_SERIAL | CONNECTION_TCP };
 
-
-    #ifdef TCPIPDEVICE
-	//virtual bool Handshake() override;
-	int TcpRequest(char *myMessage, char *myResult);
+	int TcpRequest(char *request, char *response, char stopChar);
     int tcpRetries;
+    int connectionRetries;
+    int commandRetries;
     void CloseConnection();
-    //bool TestConnection();
-	//#else
-    //bool Connect() override;
-    //bool Disconnect() override;
-	#endif
-
-
     bool Handshake();
-    bool Ack();
-    bool Resync();
-
-    bool reset();
-    bool readSettings();
-
-    bool setOutput(unsigned int channel, unsigned int value);
-    bool setCalibrations(unsigned int ch1, unsigned int ch2, unsigned int ambient);
-    bool setThresholds(unsigned int ch1, unsigned int ch2);
-    bool setAutoMode(bool enable);
-    bool setLinkMode(bool enable);
-    bool setAggressivity(unsigned int aggressivity);
-
+	void GetData();
+	void SetData();
     Connection::TCP *TCPConnection{ nullptr };
     Connection::Serial *serialConnection{ nullptr };
     int PortFD{ -1 };
 
+    INumber HeatersN[6];
+    INumberVectorProperty HeatersNP;
 
-    INumber OutputsN[3];
-    INumberVectorProperty OutputsNP;
+    INumber FansN[2];
+    INumberVectorProperty FansNP;
 
-    INumber TemperaturesN[3];
-    INumberVectorProperty TemperaturesNP;
-
-    INumber CalibrationsN[3];
-    INumberVectorProperty CalibrationsNP;
-
-    INumber ThresholdsN[2];
-    INumberVectorProperty ThresholdsNP;
+    INumber TemperatureN[1];
+    INumberVectorProperty TemperatureNP;
 
     INumber HumidityN[1];
     INumberVectorProperty HumidityNP;
 
     INumber DewpointN[1];
     INumberVectorProperty DewpointNP;
-
-    INumber AggressivityN[1];
-    INumberVectorProperty AggressivityNP;
-
-    ISwitch AutoModeS[2];
-    ISwitchVectorProperty AutoModeSP;
-
-    ISwitch LinkOut23S[2];
-    ISwitchVectorProperty LinkOut23SP;
-
-    ISwitch ResetS[1];
-    ISwitchVectorProperty ResetSP;
-
-    INumber FWversionN[1];
-    INumberVectorProperty FWversionNP;
+ 
 };
 
 #endif

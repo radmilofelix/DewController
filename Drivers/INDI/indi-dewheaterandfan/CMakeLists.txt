@@ -21,9 +21,10 @@ include(CMakeCommon)
 
 #set(GPIO_LIBRARIES "libgpiod.so")
 
-################ ROR System ################
+################ DewHeater ################
 set(indi_dewheaterandfan_SRCS
         ${CMAKE_CURRENT_SOURCE_DIR}/dewheaterandfan.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/StringParse.cpp
    )
 
 IF (UNITY_BUILD)

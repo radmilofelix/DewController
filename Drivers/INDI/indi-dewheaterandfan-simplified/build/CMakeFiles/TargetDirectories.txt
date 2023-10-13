@@ -1,7 +1,0 @@
-/home/pi/indi-dewheaterandfan/build/CMakeFiles/install/strip.dir
-/home/pi/indi-dewheaterandfan/build/CMakeFiles/install.dir
-/home/pi/indi-dewheaterandfan/build/CMakeFiles/list_install_components.dir
-/home/pi/indi-dewheaterandfan/build/CMakeFiles/rebuild_cache.dir
-/home/pi/indi-dewheaterandfan/build/CMakeFiles/edit_cache.dir
-/home/pi/indi-dewheaterandfan/build/CMakeFiles/install/local.dir
-/home/pi/indi-dewheaterandfan/build/CMakeFiles/indi_dewheaterandfan.dir

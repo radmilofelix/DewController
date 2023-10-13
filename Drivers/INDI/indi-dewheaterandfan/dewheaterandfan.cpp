@@ -20,75 +20,112 @@
 */
 
 #include "dewheaterandfan.h"
-#include "connectionplugins/connectioninterface.h"
-#include "connectionplugins/connectionserial.h"
-#include "connectionplugins/connectiontcp.h"
-#include "indicom.h"
-
-#include <cmath>
-#include <cstring>
-#include <memory>
-
-#include <termios.h>
-#include <unistd.h>
-
-#define DEW_TIMEOUT 3
 
 std::unique_ptr<DewHeaterAndFan> dewHeaterAndFan(new DewHeaterAndFan());
 
 DewHeaterAndFan::DewHeaterAndFan()
 {
     setVersion(1, 1);
-    #ifdef TCPIPDEVICE
-    //setDefaultdeviceConnection(CONNECTION_TCP);
-    tcpRetries=3;
-    #endif
+    tcpRetries=TCPRETRIES;
+    connectionRetries = CONNECTIONRETRIES;
+    commandRetries = COMMANDRETRIES;
 }
 
-#ifdef TCPIPDEVICE
-int DewHeaterAndFan::TcpRequest(char *myMessage, char *myResult)
+int DewHeaterAndFan::TcpRequest(char *request, char *response, char stopChar)
 {
+    if (getActiveConnection() == serialConnection)
+    {
+        PortFD = serialConnection->getPortFD();
+    }
+    else if (getActiveConnection() == TCPConnection)
+    {
+        PortFD = TCPConnection->getPortFD();
+    }
+
     int rc = 0, nbytes_written = 0, nbytes_read = 0;
-    if ((rc = tty_write_string(PortFD, myMessage, &nbytes_written)) != TTY_OK)
-    {
-        LOGF_WARN("Error writing tcp request to RorMagIP TCP server. Request: %s", myMessage);
-//    Disconnect driver if the connection to the ROR server is lost
-		if(tcpRetries==0)
-			CloseConnection();
+	char errstr[MAXRBUF];
+
+	while(tcpRetries)
+	{
+		tcflush(PortFD, TCIOFLUSH);
+		rc = tty_write_string(PortFD, request, &nbytes_written);
+		if( rc== TTY_OK )
+		{
+			break;
+		}
 		else
+		{
 			tcpRetries--;
-		return 0;
-    }
-    else
-	tcpRetries=3;
-    if (static_cast<int>(rc == tty_read_section(PortFD, myResult, '\0', DEW_TCP_TIMEOUT, &nbytes_read)) != TTY_OK)
-    {
-        LOGF_WARN("Error reading tcp response from RorMagIP TCP server. Request: %s", myMessage);
-        return 0;
-    }
+			if( tcpRetries == 0)
+			{
+				tty_error_msg(rc, errstr, MAXRBUF);
+				LOGF_ERROR("Error writing command %s: %s.", request, errstr);
+				LOGF_WARN("Error writing  tcp rquest to DewHeater TCP server. Request: %s", request);
+				return rc;
+			}
+		}
+		usleep(500000);
+	}
+	tcpRetries = TCPRETRIES;
+	while(tcpRetries)
+	{
+		tcflush(PortFD, TCIOFLUSH);
+		rc = tty_read_section(PortFD, response, stopChar, TCP_TIMEOUT, &nbytes_read);
+		if( rc== TTY_OK )
+		{
+			break;
+		}
+		else
+		{
+			tcpRetries--;
+			if( tcpRetries == 0)
+			{
+				tty_error_msg(rc, errstr, MAXRBUF);
+				LOGF_ERROR("Error reading response: %s.", errstr);
+				LOGF_WARN("Error reading tcp response from DewHeater device. Request: %s, Response: %s", request, response);
+				return rc;
+			}
+		}
+		usleep(500000);
+	}
+	tcpRetries = TCPRETRIES;
+    response[strcspn(response, "\r")] = 0;
+    response[strcspn(response, "\n")] = 0;
+	response[nbytes_read]=0;
     return rc;
 }
-#endif
 
 void DewHeaterAndFan::CloseConnection()
 {
-//    Disconnect();
-    ISwitchVectorProperty *svp = getSwitch("CONNECTION");
-    char *namesSw[2];
-    ISState statesSw[2];
-    statesSw[0] = ISS_OFF;
-    statesSw[1] = ISS_ON;
-    namesSw[0]  = const_cast<char *>("Connect");
-    namesSw[1]  = const_cast<char *>("Disconnect");
-    IUUpdateSwitch(svp, statesSw, namesSw, 2);
-    svp->s = IPS_ALERT;
-    IDSetSwitch(svp, nullptr);
-//    deleteProperty(MountLockLP.name);
-//    deleteProperty(RoofPositionNP.name);
-//    deleteProperty(RoofStatusTP.name);
-//    deleteProperty(ParkSP.name);
-    tcpRetries=3;
-    LOG_ERROR("TCP connection error, driver disconnected.");
+    Disconnect();
+	INDI::PropertySwitch svp = getSwitch("CONNECTION");
+	svp.onUpdate([svp, this]() mutable
+	{
+        if (!isConnected())
+        {
+            svp.setState(IPS_ALERT);
+            svp.apply("Cannot change property while device is disconnected.");
+            return;
+        }
+        auto index = svp.findOnSwitchIndex();
+        if (index < 0)
+            return;
+ 
+        svp.setState(IPS_ALERT);
+ 
+        INDI::PropertyLight light = getLight("Light Property");
+        light[index].setState(static_cast<IPState>(rand() % 4));
+        light.setState(IPS_OK);
+        light.apply();
+    });
+
+	deleteProperty(HeatersNP.name);
+    deleteProperty(FansNP.name);
+	deleteProperty(TemperatureNP.name);
+	deleteProperty(HumidityNP.name);
+	deleteProperty(DewpointNP.name);
+    tcpRetries=TCPRETRIES;
+    LOG_ERROR("TCP connection error, closing driver connection.");
 }
 
 
@@ -96,84 +133,59 @@ bool DewHeaterAndFan::initProperties()
 {
     DefaultDevice::initProperties();
 
-    /* Channel duty cycles */
-    IUFillNumber(&OutputsN[0], "CHANNEL1", "Channel 1", "%3.0f", 0., 100., 10., 0.);
-    IUFillNumber(&OutputsN[1], "CHANNEL2", "Channel 2", "%3.0f", 0., 100., 10., 0.);
-    IUFillNumber(&OutputsN[2], "CHANNEL3", "Channel 3", "%3.0f", 0., 100., 10., 0.);
-    IUFillNumberVector(&OutputsNP, OutputsN, 3, getDeviceName(), "OUTPUT", "Outputs", MAIN_CONTROL_TAB, IP_RW, 0,
+    // Heater duty cycles
+    IUFillNumber(&HeatersN[0], "HEATER1", "Heater 1", "%g", 0, 255, 10, 0);
+    IUFillNumber(&HeatersN[1], "HEATER2", "Heater 2", "%g", 0, 255, 10, 0);
+    IUFillNumber(&HeatersN[2], "HEATER3", "Heater 3", "%g", 0, 255, 10, 0);
+    IUFillNumber(&HeatersN[3], "HEATER4", "Heater 4", "%g", 0, 255, 10, 0);
+    IUFillNumber(&HeatersN[4], "HEATER5", "Heater 5", "%g", 0, 255, 10, 0);
+    IUFillNumber(&HeatersN[5], "HEATER6", "Heater 6", "%g", 0, 255, 10, 0);
+    IUFillNumberVector(&HeatersNP, HeatersN, 6, getDeviceName(), "HEATERS", "Heaters", MAIN_CONTROL_TAB, IP_RW, 0,
                        IPS_IDLE);
 
-    /* Temperatures */
-    IUFillNumber(&TemperaturesN[0], "CHANNEL1", "Channel 1", "%3.2f", -50., 70., 0., 0.);
-    IUFillNumber(&TemperaturesN[1], "CHANNEL2", "Channel 2", "%3.2f", -50., 70., 0., 0.);
-    IUFillNumber(&TemperaturesN[2], "AMBIENT", "Ambient", "%3.2f", -50., 70., 0., 0.);
-    IUFillNumberVector(&TemperaturesNP, TemperaturesN, 3, getDeviceName(), "TEMPERATURES", "Temperatures",
+    // Fans duty cycles
+    IUFillNumber(&FansN[0], "FAN1", "Fan 1", "%g", 0, 255, 10, 0);
+    IUFillNumber(&FansN[1], "FAN2", "Fan 2", "%g", 0, 255, 10, 0);
+    IUFillNumberVector(&FansNP, FansN, 2, getDeviceName(), "FANS", "Fans", MAIN_CONTROL_TAB, IP_RW, 0,
+                       IPS_IDLE);
+
+    // Temperatures
+    IUFillNumber(&TemperatureN[0], "TEMPERATURE", "Temperature [°C]", "%3.2f", -50., 70., 0., 0.);
+    IUFillNumberVector(&TemperatureNP, TemperatureN, 1, getDeviceName(), "TEMPERATURE", "Temperature",
                        MAIN_CONTROL_TAB, IP_RO, 0, IPS_IDLE);
 
-    /* Humidity */
-    IUFillNumber(&HumidityN[0], "HUMIDITY", "Humidity", "%3.2f", 0., 100., 0., 0.);
+    // Humidity
+    IUFillNumber(&HumidityN[0], "HUMIDITY", "Humidity [%]", "%3.2f", 0., 100., 0., 0.);
     IUFillNumberVector(&HumidityNP, HumidityN, 1, getDeviceName(), "HUMIDITY", "Humidity", MAIN_CONTROL_TAB, IP_RO, 0,
                        IPS_IDLE);
 
-    /* Dew point */
-    IUFillNumber(&DewpointN[0], "DEWPOINT", "Dew point", "%3.2f", -50., 70., 0., 0.);
+    // Dew point
+    IUFillNumber(&DewpointN[0], "DEWPOINT", "Dew point [°C]", "%3.2f", -50., 70., 0., 0.);
     IUFillNumberVector(&DewpointNP, DewpointN, 1, getDeviceName(), "DEWPOINT", "Dew point", MAIN_CONTROL_TAB, IP_RO, 0,
                        IPS_IDLE);
 
-    /* Temperature calibration values */
-    IUFillNumber(&CalibrationsN[0], "CHANNEL1", "Channel 1", "%1.0f", 0., 9., 1., 0.);
-    IUFillNumber(&CalibrationsN[1], "CHANNEL2", "Channel 2", "%1.0f", 0., 9., 1., 0.);
-    IUFillNumber(&CalibrationsN[2], "AMBIENT", "Ambient", "%1.0f", 0., 9., 1., 0.);
-    IUFillNumberVector(&CalibrationsNP, CalibrationsN, 3, getDeviceName(), "CALIBRATIONS", "Calibrations", OPTIONS_TAB,
-                       IP_RW, 0, IPS_IDLE);
+    if (heaterConnection & CONNECTION_SERIAL)
+    {
+        serialConnection = new Connection::Serial(this);
+        serialConnection->registerHandshake([&]()
+        {
+            return Handshake();
+        });
+        serialConnection->setDefaultBaudRate(Connection::Serial::B_115200);
+        registerConnection(serialConnection);
+    }
 
-    /* Temperature threshold values */
-    IUFillNumber(&ThresholdsN[0], "CHANNEL1", "Channel 1", "%1.0f", 0., 9., 1., 0.);
-    IUFillNumber(&ThresholdsN[1], "CHANNEL2", "Channel 2", "%1.0f", 0., 9., 1., 0.);
-    IUFillNumberVector(&ThresholdsNP, ThresholdsN, 2, getDeviceName(), "THRESHOLDS", "Thresholds", OPTIONS_TAB, IP_RW,
-                       0, IPS_IDLE);
-
-    /* Heating aggressivity */
-    IUFillNumber(&AggressivityN[0], "AGGRESSIVITY", "Aggressivity", "%1.0f", 1., 4., 1., 1.);
-    IUFillNumberVector(&AggressivityNP, AggressivityN, 1, getDeviceName(), "AGGRESSIVITY", "Aggressivity", OPTIONS_TAB,
-                       IP_RW, 0, IPS_IDLE);
-
-    /*  Automatic mode enable */
-    IUFillSwitch(&AutoModeS[0], "MANUAL", "Manual", ISS_OFF);
-    IUFillSwitch(&AutoModeS[1], "AUTO", "Automatic", ISS_ON);
-    IUFillSwitchVector(&AutoModeSP, AutoModeS, 2, getDeviceName(), "MODE", "Operating mode", MAIN_CONTROL_TAB, IP_RW,
-                       ISR_1OFMANY, 0, IPS_IDLE);
-
-    /* Link channel 2 & 3 */
-    IUFillSwitch(&LinkOut23S[0], "INDEPENDENT", "Independent", ISS_ON);
-    IUFillSwitch(&LinkOut23S[1], "LINK", "Link", ISS_OFF);
-    IUFillSwitchVector(&LinkOut23SP, LinkOut23S, 2, getDeviceName(), "LINK23", "Link ch 2&3", OPTIONS_TAB, IP_RW,
-                       ISR_1OFMANY, 0, IPS_IDLE);
-    /* Reset settings */
-    IUFillSwitch(&ResetS[0], "Reset", "", ISS_OFF);
-    IUFillSwitchVector(&ResetSP, ResetS, 1, getDeviceName(), "Reset", "", OPTIONS_TAB, IP_RW, ISR_1OFMANY, 0, IPS_IDLE);
-
-    /* Firmware version */
-    IUFillNumber(&FWversionN[0], "FIRMWARE", "Firmware Version", "%4.0f", 0., 65535., 1., 0.);
-    IUFillNumberVector(&FWversionNP, FWversionN, 1, getDeviceName(), "FW_VERSION", "Firmware", OPTIONS_TAB, IP_RO, 0,
-                       IPS_IDLE);
-
-    setDriverInterface(AUX_INTERFACE);
-
-    addDebugControl();
-    addConfigurationControl();
-    setDefaultPollingPeriod(10000);
-    addPollPeriodControl();
-
-    // No simulation control for now
-
-    TCPConnection = new Connection::TCP(this);
-    TCPConnection->registerHandshake([&]() { return Handshake(); });
-    registerConnection(TCPConnection);
-
-    serialConnection = new Connection::Serial(this);
-    serialConnection->registerHandshake([&]() { return Handshake(); });
-    registerConnection(serialConnection);
+    if (heaterConnection & CONNECTION_TCP)
+    {
+        TCPConnection = new Connection::TCP(this);
+        TCPConnection->setDefaultHost("192.168.1.1");
+        TCPConnection->setDefaultPort(10001);
+        TCPConnection->registerHandshake([&]()
+        {
+            return Handshake();
+        });
+        registerConnection(TCPConnection);
+	}
 
     return true;
 }
@@ -184,36 +196,19 @@ bool DewHeaterAndFan::updateProperties()
 
     if (isConnected())
     {
-        defineProperty(&OutputsNP);
-        defineProperty(&TemperaturesNP);
+        defineProperty(&HeatersNP);
+        defineProperty(&FansNP);
+        defineProperty(&TemperatureNP);
         defineProperty(&HumidityNP);
         defineProperty(&DewpointNP);
-        defineProperty(&CalibrationsNP);
-        defineProperty(&ThresholdsNP);
-        defineProperty(&AggressivityNP);
-        defineProperty(&AutoModeSP);
-        defineProperty(&LinkOut23SP);
-        defineProperty(&ResetSP);
-        defineProperty(&FWversionNP);
-
-        loadConfig(true);
-        readSettings();
-        LOG_INFO("USB_Dewpoint parameters updated, device ready for use.");
-        SetTimer(getCurrentPollingPeriod());
     }
     else
     {
-        deleteProperty(OutputsNP.name);
-        deleteProperty(TemperaturesNP.name);
+        deleteProperty(HeatersNP.name);
+        deleteProperty(FansNP.name);
+        deleteProperty(TemperatureNP.name);
         deleteProperty(HumidityNP.name);
         deleteProperty(DewpointNP.name);
-        deleteProperty(CalibrationsNP.name);
-        deleteProperty(ThresholdsNP.name);
-        deleteProperty(AggressivityNP.name);
-        deleteProperty(AutoModeSP.name);
-        deleteProperty(LinkOut23SP.name);
-        deleteProperty(ResetSP.name);
-        deleteProperty(FWversionNP.name);
     }
 
     return true;
@@ -221,220 +216,27 @@ bool DewHeaterAndFan::updateProperties()
 
 const char *DewHeaterAndFan::getDefaultName()
 {
-    return "Dew Heaters and Fan";
-}
-
-bool DewHeaterAndFan::sendCommand(const char *cmd, char *resp)
-{
-    int nbytes_written = 0, nbytes_read = 0, rc = -1;
-    char errstr[MAXRBUF];
-    LOGF_DEBUG("CMD: %s.", cmd);
-
-    tcflush(PortFD, TCIOFLUSH);
-    if ((rc = tty_write(PortFD, cmd, strlen(cmd), &nbytes_written)) != TTY_OK)
-    {
-        tty_error_msg(rc, errstr, MAXRBUF);
-        LOGF_ERROR("Error writing command %s: %s.", cmd, errstr);
-        return false;
-    }
-
-    if (resp)
-    {
-        if ((rc = tty_nread_section(PortFD, resp, UDP_RES_LEN, '\r', DEW_TIMEOUT, &nbytes_read)) != TTY_OK)
-        {
-            tty_error_msg(rc, errstr, MAXRBUF);
-            LOGF_ERROR("Error reading response for command %s: %s.", cmd, errstr);
-            return false;
-        }
-
-        if (nbytes_read < 2)
-        {
-            LOGF_ERROR("Invalid response for command %s: %s.", cmd, resp);
-            return false;
-        }
-        resp[nbytes_read - 2] = '\0'; // Strip \n\r
-        LOGF_DEBUG("RES: %s.", resp);
-    }
-    return true;
-}
-
-bool DewHeaterAndFan::Resync()
-{
-    char cmd[]         = " "; // Illegal command to trigger error response
-    int nbytes_written = 0, nbytes_read = 0, rc = -1;
-    char errstr[MAXRBUF];
-    char resp[UDP_RES_LEN] = {};
-
-    // Send up to 5 space characters and wait for error
-    // response ("ER=1") after which the communication
-    // is back in sync
-    tcflush(PortFD, TCIOFLUSH);
-
-    for (int resync = 0; resync < UDP_CMD_LEN; resync++)
-    {
-        LOGF_INFO("Retry %d...", resync + 1);
-
-        if ((rc = tty_write(PortFD, cmd, 1, &nbytes_written)) != TTY_OK)
-        {
-            tty_error_msg(rc, errstr, MAXRBUF);
-            LOGF_ERROR("Error writing resync: %s.", errstr);
-            return false;
-        }
-
-        rc = tty_nread_section(PortFD, resp, UDP_RES_LEN, '\r', 3, &nbytes_read);
-        if (rc == TTY_OK && nbytes_read > 0)
-        {
-            // We got a response
-            return true;
-        }
-        // We didn't get response yet, retry
-    }
-    LOG_ERROR("No valid resync response.");
-    return false;
+    return (const char *)"Dew Heaters and Fan";
 }
 
 bool DewHeaterAndFan::Handshake()
 {
-    PortFD = serialConnection->getPortFD();
 
-    int tries = 2;
-    do
+    if (isSimulation())
+        return true;
+    if(!TestConnection())
     {
-        if (Ack())
-        {
-            LOG_INFO("USB_Dewpoint is online. Getting device parameters...");
-            return true;
-        }
-        LOG_INFO("Error retrieving data from USB_Dewpoint, trying resync...");
-    } while (--tries > 0 && Resync());
-
-    LOG_INFO("Error retrieving data from USB_Dewpoint, please ensure controller "
-             "is powered and the port is correct.");
-    return false;
-}
-
-bool DewHeaterAndFan::Ack()
-{
-    char resp[UDP_RES_LEN] = {};
-    tcflush(PortFD, TCIOFLUSH);
-
-    if (!sendCommand(UDP_IDENTIFY_CMD, resp))
-        return false;
-
-    int firmware = -1;
-
-    int ok = sscanf(resp, UDP_IDENTIFY_RESPONSE, &firmware);
-
-    if (ok != 1)
-    {
-        LOGF_ERROR("USB_Dewpoint not properly identified! Answer was: %s.", resp);
+        LOG_ERROR("Handshake:Connection error.");
         return false;
     }
-
-    FWversionN[0].value = firmware;
-    FWversionNP.s       = IPS_OK;
     return true;
-}
-
-bool DewHeaterAndFan::setOutput(unsigned int channel, unsigned int value)
-{
-    char cmd[UDP_CMD_LEN + 1];
-    char resp[UDP_RES_LEN];
-
-    snprintf(cmd, UDP_CMD_LEN + 1, UDP_OUTPUT_CMD, channel, value);
-    return sendCommand(cmd, resp);
-}
-
-bool DewHeaterAndFan::setCalibrations(unsigned int ch1, unsigned int ch2, unsigned int ambient)
-{
-    char cmd[UDP_CMD_LEN + 1];
-    char resp[UDP_RES_LEN];
-
-    snprintf(cmd, UDP_CMD_LEN + 1, UDP_CALIBRATION_CMD, ch1, ch2, ambient);
-    return sendCommand(cmd, resp);
-}
-
-bool DewHeaterAndFan::setThresholds(unsigned int ch1, unsigned int ch2)
-{
-    char cmd[UDP_CMD_LEN + 1];
-    char resp[UDP_RES_LEN];
-
-    snprintf(cmd, UDP_CMD_LEN + 1, UDP_THRESHOLD_CMD, ch1, ch2);
-    return sendCommand(cmd, resp);
-}
-
-bool DewHeaterAndFan::setAggressivity(unsigned int aggressivity)
-{
-    char cmd[UDP_CMD_LEN + 1];
-    char resp[UDP_RES_LEN];
-
-    snprintf(cmd, UDP_CMD_LEN + 1, UDP_AGGRESSIVITY_CMD, aggressivity);
-    return sendCommand(cmd, resp);
-}
-
-bool DewHeaterAndFan::reset()
-{
-    char resp[UDP_RES_LEN];
-    return sendCommand(UDP_RESET_CMD, resp);
-}
-
-bool DewHeaterAndFan::setAutoMode(bool enable)
-{
-    char cmd[UDP_CMD_LEN + 1];
-    char resp[UDP_RES_LEN];
-
-    snprintf(cmd, UDP_CMD_LEN + 1, UDP_AUTO_CMD, enable ? 1 : 0);
-    return sendCommand(cmd, resp);
-}
-
-bool DewHeaterAndFan::setLinkMode(bool enable)
-{
-    char cmd[UDP_CMD_LEN + 1];
-    char resp[UDP_RES_LEN];
-
-    snprintf(cmd, UDP_CMD_LEN + 1, UDP_LINK_CMD, enable ? 1 : 0);
-    return sendCommand(cmd, resp);
 }
 
 bool DewHeaterAndFan::ISNewSwitch(const char *dev, const char *name, ISState *states, char *names[], int n)
 {
     if (dev != nullptr && strcmp(dev, getDeviceName()) == 0)
     {
-        if (strcmp(AutoModeSP.name, name) == 0)
-        {
-            IUUpdateSwitch(&AutoModeSP, states, names, n);
-            int target_mode = IUFindOnSwitchIndex(&AutoModeSP);
-            AutoModeSP.s    = IPS_BUSY;
-            IDSetSwitch(&AutoModeSP, nullptr);
-            setAutoMode(target_mode == 1);
-            readSettings();
-            return true;
-        }
-        if (strcmp(LinkOut23SP.name, name) == 0)
-        {
-            IUUpdateSwitch(&LinkOut23SP, states, names, n);
-            int target_mode = IUFindOnSwitchIndex(&LinkOut23SP);
-            LinkOut23SP.s   = IPS_BUSY;
-            IDSetSwitch(&LinkOut23SP, nullptr);
-            setLinkMode(target_mode == 1);
-            readSettings();
-            return true;
-        }
-        if (strcmp(ResetSP.name, name) == 0)
-        {
-            IUResetSwitch(&ResetSP);
 
-            if (reset())
-            {
-                ResetSP.s = IPS_OK;
-                readSettings();
-            }
-            else
-                ResetSP.s = IPS_ALERT;
-
-            IDSetSwitch(&ResetSP, nullptr);
-            return true;
-        }
     }
 
     return INDI::DefaultDevice::ISNewSwitch(dev, name, states, names, n);
@@ -442,58 +244,28 @@ bool DewHeaterAndFan::ISNewSwitch(const char *dev, const char *name, ISState *st
 
 bool DewHeaterAndFan::ISNewNumber(const char *dev, const char *name, double values[], char *names[], int n)
 {
+	
+	
     if (dev != nullptr && strcmp(dev, getDeviceName()) == 0)
     {
-        if (strcmp(name, OutputsNP.name) == 0)
+        if (strcmp(name, HeatersNP.name) == 0)
         {
-            // Warn if we are in auto mode
-            int target_mode = IUFindOnSwitchIndex(&AutoModeSP);
-            if (target_mode == 1)
-            {
-                LOG_WARN("Setting output power is ignored in auto mode!");
-                return true;
-            }
-            IUUpdateNumber(&OutputsNP, values, names, n);
-            OutputsNP.s = IPS_BUSY;
-            IDSetNumber(&OutputsNP, nullptr);
-            setOutput(1, OutputsN[0].value);
-            setOutput(2, OutputsN[1].value);
-            setOutput(3, OutputsN[2].value);
-            readSettings();
+            IUUpdateNumber(&HeatersNP, values, names, n);
+            HeatersNP.s = IPS_BUSY;
+            IDSetNumber(&HeatersNP, nullptr);
+			SetData();
+//            GetData(); // called by timer
             return true;
         }
-        if (strcmp(name, CalibrationsNP.name) == 0)
+
+
+        if (strcmp(name, FansNP.name) == 0)
         {
-            IUUpdateNumber(&CalibrationsNP, values, names, n);
-            CalibrationsNP.s = IPS_BUSY;
-            IDSetNumber(&CalibrationsNP, nullptr);
-            setCalibrations(CalibrationsN[0].value, CalibrationsN[1].value, CalibrationsN[2].value);
-            readSettings();
-            return true;
-        }
-        if (strcmp(name, ThresholdsNP.name) == 0)
-        {
-            IUUpdateNumber(&ThresholdsNP, values, names, n);
-            ThresholdsNP.s = IPS_BUSY;
-            IDSetNumber(&ThresholdsNP, nullptr);
-            setThresholds(ThresholdsN[0].value, ThresholdsN[1].value);
-            readSettings();
-            return true;
-        }
-        if (strcmp(name, AggressivityNP.name) == 0)
-        {
-            IUUpdateNumber(&AggressivityNP, values, names, n);
-            AggressivityNP.s = IPS_BUSY;
-            IDSetNumber(&AggressivityNP, nullptr);
-            setAggressivity(AggressivityN[0].value);
-            readSettings();
-            return true;
-        }
-        if (strcmp(name, FWversionNP.name) == 0)
-        {
-            IUUpdateNumber(&FWversionNP, values, names, n);
-            FWversionNP.s = IPS_OK;
-            IDSetNumber(&FWversionNP, nullptr);
+            IUUpdateNumber(&FansNP, values, names, n);
+            FansNP.s = IPS_BUSY;
+            IDSetNumber(&FansNP, nullptr);
+			SetData();
+//            GetData();
             return true;
         }
     }
@@ -501,34 +273,104 @@ bool DewHeaterAndFan::ISNewNumber(const char *dev, const char *name, double valu
     return INDI::DefaultDevice::ISNewNumber(dev, name, values, names, n);
 }
 
-bool DewHeaterAndFan::readSettings()
+bool DewHeaterAndFan::TestConnection()
 {
-    char resp[UDP_RES_LEN];
+    return SendCommand( HARTBEATCALL, HARTBEATRESPONSE, "\n");
+}
 
-    if (!sendCommand(UDP_STATUS_CMD, resp))
-        return false;
-
-    // Status response is like:
-    // ##22.37/22.62/23.35/50.77/12.55/0/0/0/0/0/0/2/2/0/0/4**
-
-    float temp1, temp2, temp_ambient, humidity, dewpoint;
-    unsigned int output1, output2, output3;
-    unsigned int calibration1, calibration2, calibration_ambient;
-    unsigned int threshold1, threshold2;
-    unsigned int automode, linkout23, aggressivity;
-
-    int ok = sscanf(resp, UDP_STATUS_RESPONSE, &temp1, &temp2, &temp_ambient, &humidity, &dewpoint, &output1, &output2,
-                    &output3, &calibration1, &calibration2, &calibration_ambient, &threshold1, &threshold2, &automode,
-                    &linkout23, &aggressivity);
-
-    if (ok == 16)
+void DewHeaterAndFan::TimerHit()
+{
+    if (!isConnected())
     {
-        TemperaturesN[0].value = temp1;
-        TemperaturesN[1].value = temp2;
-        TemperaturesN[2].value = temp_ambient;
-        TemperaturesNP.s       = IPS_OK;
-        IDSetNumber(&TemperaturesNP, nullptr);
+		LOGF_WARN( "TimerHit: %s", "Device disconnected" );
+        return; //  No need to reset timer if we are not connected anymore
+	}
+    if( !TestConnection() )
+    {
+		if( connectionRetries == 0 )
+		{
+			CloseConnection();
+		}
+		else
+		{
+			connectionRetries--;
+		}
+	}
+	else
+	{
+		connectionRetries = CONNECTIONRETRIES;
+		GetData();
+	}
 
+    SetTimer(getCurrentPollingPeriod());
+}
+
+
+bool DewHeaterAndFan::SendCommand(std::string request, std::string expectedResponse, std::string delimiter)
+{
+    char pRES[MAXRBUF] = {0};
+    while (commandRetries)
+    {
+        TcpRequest( (char*)request.c_str(), pRES, TCPSTOPCHAR);
+		buffer = pRES;
+        StringParse stringParse( buffer, delimiter);
+        if( stringParse.GetElement(0) == expectedResponse)
+        {
+            commandRetries = COMMANDRETRIES;
+            return true;
+        }
+        else
+        {
+			if( stringParse.GetElement(0) == "OUTOFRANGE" )
+			{
+				commandRetries = COMMANDRETRIES;
+				return false;
+			}
+			if( stringParse.GetElement(0) == "NODELIMITER" )
+			{
+				if( buffer == expectedResponse )
+				{
+					commandRetries = COMMANDRETRIES;
+					return true;
+				}
+			}
+		}
+        commandRetries--;
+        usleep(500000);
+    }
+	LOGF_WARN( "SendCommand error, request: %s, response: %s, expected: %s", request.c_str(), buffer.c_str(), expectedResponse.c_str() ); 
+    commandRetries = COMMANDRETRIES;
+    return false;
+}
+
+
+void DewHeaterAndFan::GetData()
+{
+	if( SendCommand( GETDATA, GETDATAHEADER, DATADELIMITER))
+	{
+		StringParse stringParse( buffer, DATADELIMITER);
+		float temperature = (float)stoi(stringParse.GetElement(10))/100 ;
+		float humidity = (float)stoi(stringParse.GetElement(11))/100;
+		float dewpoint = temperature -  ((100. - humidity)/5.);
+		HeatersN[0].value = stoi( stringParse.GetElement(1) );
+		HeatersN[1].value = stoi( stringParse.GetElement(2) );
+		HeatersN[2].value = stoi( stringParse.GetElement(3) );
+		HeatersN[3].value = stoi( stringParse.GetElement(4) );
+		HeatersN[4].value = stoi( stringParse.GetElement(5) );
+		HeatersN[5].value = stoi( stringParse.GetElement(6) );
+		HeatersNP.s = IPS_OK;
+		IDSetNumber(&HeatersNP, nullptr);
+
+		FansN[0].value = stoi( stringParse.GetElement(7) );
+		FansN[1].value = stoi( stringParse.GetElement(8) );
+		FansNP.s = IPS_OK;
+		IDSetNumber(&FansNP, nullptr);
+		
+        TemperatureN[0].value = temperature;
+        TemperatureNP.s       = IPS_OK;
+        IDSetNumber(&TemperatureNP, nullptr);
+        
+        
         HumidityN[0].value = humidity;
         HumidityNP.s       = IPS_OK;
         IDSetNumber(&HumidityNP, nullptr);
@@ -536,49 +378,26 @@ bool DewHeaterAndFan::readSettings()
         DewpointN[0].value = dewpoint;
         DewpointNP.s       = IPS_OK;
         IDSetNumber(&DewpointNP, nullptr);
-
-        OutputsN[0].value = output1;
-        OutputsN[1].value = output2;
-        OutputsN[2].value = output3;
-        OutputsNP.s       = IPS_OK;
-        IDSetNumber(&OutputsNP, nullptr);
-
-        CalibrationsN[0].value = calibration1;
-        CalibrationsN[1].value = calibration2;
-        CalibrationsN[2].value = calibration_ambient;
-        CalibrationsNP.s       = IPS_OK;
-        IDSetNumber(&CalibrationsNP, nullptr);
-
-        ThresholdsN[0].value = threshold1;
-        ThresholdsN[1].value = threshold2;
-        ThresholdsNP.s       = IPS_OK;
-        IDSetNumber(&ThresholdsNP, nullptr);
-
-        IUResetSwitch(&AutoModeSP);
-        AutoModeS[automode].s = ISS_ON;
-        AutoModeSP.s          = IPS_OK;
-        IDSetSwitch(&AutoModeSP, nullptr);
-
-        IUResetSwitch(&LinkOut23SP);
-        LinkOut23S[linkout23].s = ISS_ON;
-        LinkOut23SP.s           = IPS_OK;
-        IDSetSwitch(&LinkOut23SP, nullptr);
-
-        AggressivityN[0].value = aggressivity;
-        AggressivityNP.s       = IPS_OK;
-        IDSetNumber(&AggressivityNP, nullptr);
-    }
-    return true;
+	}
+	else
+	{
+		LOGF_WARN( "GetData: %s", "Response wrong" );
+	}
 }
-
-void DewHeaterAndFan::TimerHit()
+	
+void DewHeaterAndFan::SetData()
 {
-    if (!isConnected())
-    {
-        return;
-    }
-
-    // Get temperatures etc.
-    readSettings();
-    SetTimer(getCurrentPollingPeriod());
+	std::string dataBuffer;
+	dataBuffer = SETDATA;
+	for(int i=0; i<6; i++)
+	{
+		dataBuffer += std::to_string( (int)HeatersN[i].value) ;
+		dataBuffer += DATADELIMITER;
+	}
+	for(int i=0; i<2; i++)
+	{
+		dataBuffer += std::to_string( (int)FansN[i].value );
+		dataBuffer += DATADELIMITER;
+	}
+	SendCommand(dataBuffer, CONFIRMATION,  DATADELIMITER);
 }
