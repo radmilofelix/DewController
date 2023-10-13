@@ -22,6 +22,7 @@
 
 //#define DEBUG
 
+#define DHCP
 #define TCPPORT 20002
 #define TCPPORT1 20003
 #define ANALOGWRITERESOLUTION 8 // default
@@ -41,14 +42,18 @@
 // gateway and subnet are optional:
 byte mac[] =
 {
-//  0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0x01 // black DHT
-  0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0x02 // white DHT
+  0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0x01 // black DHT
+//  0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0x02 // white DHT
 };
-IPAddress ip(192, 168, 111, 176); // black DHT
-IPAddress ip(192, 168, 111, 177); // white DHT
-//IPAddress myDns(192, 168, 111, 1);
-//IPAddress gateway(192, 168, 111, 1);
-//IPAddress subnet(255, 255, 255, 0);
+
+#ifndef DHCP
+    IPAddress ip(192, 168, 111, 176); // black DHT
+//    IPAddress ip(192, 168, 111, 177); // white DHT
+
+//    IPAddress myDns(192, 168, 111, 1);
+//    IPAddress gateway(192, 168, 111, 1);
+//    IPAddress subnet(255, 255, 255, 0);
+#endif
 
 struct DEWCONTROLLERDATA
 {   

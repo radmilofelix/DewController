@@ -75,10 +75,6 @@ void setup()
     pinMode(ETHLED, OUTPUT);
     digitalWrite(ETHLED, LOW);
 
-// initialize the Ethernet device
-//  Ethernet.begin(mac, ip, myDns, gateway, subnet);
-    Ethernet.begin(mac, ip);
-
   // Open serial communications and wait for port to open:
 //  Serial2.begin(19200);  // PA3  (RX)  PA2  (TX)
     Serial.begin(115200);  // PA10  (RX)  PA9  (TX)
@@ -88,6 +84,13 @@ void setup()
     Serial.println(""); Serial.println(""); Serial.println(""); Serial.println("");
     Serial.println("Serial1 started...");
 #endif
+
+//    initialize the Ethernet device
+    #ifdef DHCP
+        Ethernet.begin(mac); // DHCP
+    #else
+        Ethernet.begin(mac, ip);
+    #endif
 
   // Check for Ethernet hardware present
     if (Ethernet.hardwareStatus() == EthernetNoHardware)
