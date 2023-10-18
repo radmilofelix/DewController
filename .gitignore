@@ -3,7 +3,6 @@
 *.gcode
 *.FCStd1
 
-_Photos/
 Software/Deploy/
 
 Software/build*/
