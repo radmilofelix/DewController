@@ -3,8 +3,8 @@
 *.gcode
 *.FCStd1
 
+_images/
 Software/Deploy/
-
 Software/build*/
 #Software/build-DewController-Desktop_Qt_6_5_2_MinGW_64_bit-Release/
 #Software/build-DewController-Desktop_Qt_6_5_2_MinGW_64_bit-Debug/

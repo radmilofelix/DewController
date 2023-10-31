@@ -8,9 +8,9 @@
 #include <QTimer>
 #include <QThread>
 
-#define DEBUG
+//#define DEBUG
 
-#define WINDOWS_SYSTEM
+//#define WINDOWS_SYSTEM
 
 #ifdef WINDOWS_SYSTEM
 #include<windows.h>

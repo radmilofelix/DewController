@@ -1,7 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=DewController
-Comment=Application to control the dew heaters on the telescope
-Exec=DewController
-Icon=DewController
-Categories=Utility;
