@@ -1,7 +1,0 @@
-/home/radmilo/programming/indi-drivers/indi-dewheaterandfan/build/CMakeFiles/install/strip.dir
-/home/radmilo/programming/indi-drivers/indi-dewheaterandfan/build/CMakeFiles/install.dir
-/home/radmilo/programming/indi-drivers/indi-dewheaterandfan/build/CMakeFiles/list_install_components.dir
-/home/radmilo/programming/indi-drivers/indi-dewheaterandfan/build/CMakeFiles/rebuild_cache.dir
-/home/radmilo/programming/indi-drivers/indi-dewheaterandfan/build/CMakeFiles/edit_cache.dir
-/home/radmilo/programming/indi-drivers/indi-dewheaterandfan/build/CMakeFiles/install/local.dir
-/home/radmilo/programming/indi-drivers/indi-dewheaterandfan/build/CMakeFiles/indi_dewheaterandfan.dir

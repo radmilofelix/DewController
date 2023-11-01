@@ -10,4 +10,4 @@ Software/build*/
 #Software/build-DewController-Desktop_Qt_6_5_2_MinGW_64_bit-Debug/
 
 **/*backups/
-Schematic&PCB/KiCad/DewController-V1.0/DewController-V1.0-backups/
+**/build*/

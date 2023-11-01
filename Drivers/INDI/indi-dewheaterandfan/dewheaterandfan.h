@@ -39,12 +39,15 @@
 #include <defaultdevice.h>
 #include "StringParse.h"
 
+#define DEWDEBUG
+
+
 // Network
 #define TIMERHIT_VALUE 1000 // milliseconds
 #define TCPRETRIES 5
 #define CONNECTIONRETRIES 5
 #define COMMANDRETRIES 5
-#define TCP_TIMEOUT 3
+#define TCP_TIMEOUT 5
 #define TCPSTOPCHAR '\n'
 
 //      Communication

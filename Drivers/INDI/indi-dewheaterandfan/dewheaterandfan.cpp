@@ -66,27 +66,16 @@ int DewHeaterAndFan::TcpRequest(char *request, char *response, char stopChar)
 		}
 		usleep(500000);
 	}
-	tcpRetries = TCPRETRIES;
-	while(tcpRetries)
+	tcflush(PortFD, TCIOFLUSH);
+	rc = tty_read_section(PortFD, response, stopChar, TCP_TIMEOUT, &nbytes_read);
+	if( rc != TTY_OK )
 	{
-		tcflush(PortFD, TCIOFLUSH);
-		rc = tty_read_section(PortFD, response, stopChar, TCP_TIMEOUT, &nbytes_read);
-		if( rc== TTY_OK )
-		{
-			break;
-		}
-		else
-		{
-			tcpRetries--;
-			if( tcpRetries == 0)
-			{
-				tty_error_msg(rc, errstr, MAXRBUF);
-				LOGF_ERROR("Error reading response: %s.", errstr);
-				LOGF_WARN("Error reading tcp response from DewHeater device. Request: %s, Response: %s", request, response);
-				return rc;
-			}
-		}
-		usleep(500000);
+		tty_error_msg(rc, errstr, MAXRBUF);
+		#ifdef DEWDEBUG
+			LOGF_WARN("Error reading response: %s.", errstr);
+			LOGF_WARN("Error reading tcp response from RORWeatherIP device. Request: %s, Response: %s", request, response);
+		#endif
+		return rc;
 	}
 	tcpRetries = TCPRETRIES;
     response[strcspn(response, "\r")] = 0;

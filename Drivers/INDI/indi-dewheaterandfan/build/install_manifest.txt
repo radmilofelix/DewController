@@ -1,2 +1,0 @@
-/usr/bin/indi_dewheaterandfan
-/usr/share/indi/indi_dewheaterandfan.xml
