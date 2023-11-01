@@ -3,7 +3,9 @@
 *.gcode
 *.FCStd1
 
-_images/
-Software/Deploy/
 **/*backups/
 **/build*/
+
+_images/
+Software/Deploy/
+
