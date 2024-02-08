@@ -17,7 +17,6 @@ The device also has a DHT22 temperature & humidity sensor, so the dew point can 
 ![](_Photos/20231018_042801-labelled.png)
 
 ![](_Photos/20230621_223318-labelled.png)
-
 1.  - Heater 1 (connector and LED)
 2.  - Heater 2 (connector and LED)
 3.  - Heater 3 (connector and LED)
