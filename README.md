@@ -14,7 +14,7 @@ The device also has a DHT22 temperature & humidity sensor, so the dew point can 
 
 ![](_Photos/20231017_225909-labelled.png)
 
-![](_Photos/20231018_042801-labelled.png)
+![](_Photos/20231018_042801-labelled.pngk)
 
 ![](_Photos/20230621_223318-labelled.png)
 
