@@ -11,10 +11,9 @@ The heaters and fans are driven by PWM signals software controlled by means of a
 The device also has a DHT22 temperature & humidity sensor, so the dew point can be computed to get an indication of whether the heaters have to be powered and how much power has to be supplied to the heaters.
 
 # Description
+![](_Photos/20231017_225909-labelled.pngk)
 
-![](_Photos/20231017_225909-labelled.png)
-
-![](_Photos/20231018_042801-labelled.pngk)
+![](_Photos/20231018_042801-labelled.png)
 
 ![](_Photos/20230621_223318-labelled.png)
 
