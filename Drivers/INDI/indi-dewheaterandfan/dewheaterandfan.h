@@ -105,21 +105,11 @@ class DewHeaterAndFan : public INDI::DefaultDevice
     Connection::Serial *serialConnection{ nullptr };
     int PortFD{ -1 };
 
-    INumber HeatersN[6];
-    INumberVectorProperty HeatersNP;
-
-    INumber FansN[2];
-    INumberVectorProperty FansNP;
-
-    INumber TemperatureN[1];
-    INumberVectorProperty TemperatureNP;
-
-    INumber HumidityN[1];
-    INumberVectorProperty HumidityNP;
-
-    INumber DewpointN[1];
-    INumberVectorProperty DewpointNP;
- 
+	INDI::PropertyNumber HeatersNP {6};
+	INDI::PropertyNumber FansNP {2};
+	INDI::PropertyNumber TemperatureNP {1};
+	INDI::PropertyNumber HumidityNP {1};
+	INDI::PropertyNumber DewpointNP {1};
 };
 
 #endif
