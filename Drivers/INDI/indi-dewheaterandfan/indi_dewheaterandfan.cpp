@@ -19,7 +19,7 @@
 
 */
 
-#include "dewheaterandfan.h"
+#include "indi_dewheaterandfan.h"
 
 std::unique_ptr<DewHeaterAndFan> dewHeaterAndFan(new DewHeaterAndFan());
 
