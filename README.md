@@ -1,9 +1,9 @@
 # DewController
  **Device to control the dew heaters and fans on astronomic instruments**
  
- Dew is an obvious nuisance for astronomic instruments and a simple way of getting rid of it are heaters places on elements of the optical chain susceptible to forming dew.
+ Dew is an obvious nuisance for astronomic instruments and a simple way of getting rid of it are heaters placed on elements of the optical chain susceptible to forming dew.
 
-The the described device is a 6 channel heater driver, and a 2 channel fan driver, as some reflecting telescopes have a fan installed on the back of the main mirror.
+The described device is a 6 channel heater driver, and a 2 channel fan driver, as some reflecting telescopes have a fan installed on the back of the main mirror.
 
 The heaters and fans are driven by PWM signals software controlled by means of a STM32F103 microcontroller. The connection with the computer can be achieved either through USB or Ethernet (TCP/IP) or both.
 ![](_Photos/20230602_054221.jpg)
